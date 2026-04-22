@@ -1,0 +1,28 @@
+README.md
+  a53a9d52-168a-4612-8833-0ab07ea28307:2026-04-22T18:32:32.777Z 3,5,9,11,13,15-21,26-47,49,52,54,56,58,60,62,68-73,81-82,92,97-98,100-103,109,112,114-154,156,158-162,164,167,170-172,174-177,180,182,184-187
+backend/internal/chat/auth_handler.go
+  a53a9d52-168a-4612-8833-0ab07ea28307:2026-04-22T18:02:01.434Z 1,3-6,8-9,11-42,44-65,67-76
+backend/internal/chat/chat_handler.go
+  a53a9d52-168a-4612-8833-0ab07ea28307:2026-04-22T18:05:13.901Z 1,3-7,9,11-12,14-18,20-29,31-35,37-50,52,54-59,61-62,64-68,70-76,78-81,83-106,108-113,115-117,119-122,124-128,130-133,135-145,147-148,150-154,156-171,173-191
+backend/internal/chat/forest_handler.go
+  a53a9d52-168a-4612-8833-0ab07ea28307:2026-04-22T18:03:03.136Z 1,3-6,8,10-11,13-29,31-43,45-58,60-70,72-73,75-83,85-97
+backend/internal/chat/handler.go
+  a53a9d52-168a-4612-8833-0ab07ea28307:2026-04-22T18:01:41.728Z 1,18
+backend/internal/chat/session_handler.go
+  a53a9d52-168a-4612-8833-0ab07ea28307:2026-04-22T18:02:43.851Z 1,3-5,7,9-10,12-14,16-27,29-38,40-42,44-65,67-76
+backend/internal/chat/upload_handler.go
+  a53a9d52-168a-4612-8833-0ab07ea28307:2026-04-22T18:04:03.235Z 1,3-11,15-16,18-26,28-30,32,34,36,38,40-44,46-48,50,52-54,56-58,61-69,71-72,74-79,81-83,85-90,92-94,96-100,103-107,109,111-116,118-122,124-125,127-129,131-132,134-136,138-143,145-151,153-154,156-158,161,163-164,166,168,170-171,173-175,177-183,185-186,188-190,192-193,195-201,203-208,210-219,221-222
+  a53a9d52-168a-4612-8833-0ab07ea28307:2026-04-22T18:05:57.205Z 13
+  a53a9d52-168a-4612-8833-0ab07ea28307:2026-04-22T18:05:47.238Z 60
+  a53a9d52-168a-4612-8833-0ab07ea28307:2026-04-22T18:06:08.975Z 73
+  a53a9d52-168a-4612-8833-0ab07ea28307:2026-04-22T18:05:25.480Z 80
+docs/prompts/explorer.md
+  a53a9d52-168a-4612-8833-0ab07ea28307:2026-04-22T17:56:51.966Z 9
+frontend/src/App.tsx
+  a53a9d52-168a-4612-8833-0ab07ea28307:2026-04-22T17:53:21.404Z 24,27,30,33,221
+frontend/src/components/AuthScreen.tsx
+  a53a9d52-168a-4612-8833-0ab07ea28307:2026-04-22T17:52:45.095Z 6,41-42
+frontend/src/components/Chat.tsx
+  a53a9d52-168a-4612-8833-0ab07ea28307:2026-04-22T17:56:35.768Z 20,36,124,130,132
+---
+{"schema_version": "authorship/3.0.0", "base_commit_sha": "HEAD~1", "prompts": {"a53a9d52-168a-4612-8833-0ab07ea28307:2026-04-22T18:32:32.777Z": {"agent_id": {"tool": "claude_code", "model": ""}, "human_author": "arjun.narain@razorpay.com", "accepted_lines": 120, "overriden_lines": 0}, "a53a9d52-168a-4612-8833-0ab07ea28307:2026-04-22T18:02:01.434Z": {"agent_id": {"tool": "claude_code", "model": ""}, "human_author": "arjun.narain@razorpay.com", "accepted_lines": 71, "overriden_lines": 0}, "a53a9d52-168a-4612-8833-0ab07ea28307:2026-04-22T18:05:13.901Z": {"agent_id": {"tool": "claude_code", "model": ""}, "human_author": "arjun.narain@razorpay.com", "accepted_lines": 167, "overriden_lines": 0}, "a53a9d52-168a-4612-8833-0ab07ea28307:2026-04-22T18:03:03.136Z": {"agent_id": {"tool": "claude_code", "model": ""}, "human_author": "arjun.narain@razorpay.com", "accepted_lines": 87, "overriden_lines": 0}, "a53a9d52-168a-4612-8833-0ab07ea28307:2026-04-22T18:01:41.728Z": {"agent_id": {"tool": "claude_code", "model": ""}, "human_author": "arjun.narain@razorpay.com", "accepted_lines": 2, "overriden_lines": 0}, "a53a9d52-168a-4612-8833-0ab07ea28307:2026-04-22T18:02:43.851Z": {"agent_id": {"tool": "claude_code", "model": ""}, "human_author": "arjun.narain@razorpay.com", "accepted_lines": 67, "overriden_lines": 0}, "a53a9d52-168a-4612-8833-0ab07ea28307:2026-04-22T18:04:03.235Z": {"agent_id": {"tool": "claude_code", "model": ""}, "human_author": "arjun.narain@razorpay.com", "accepted_lines": 175, "overriden_lines": 0}, "a53a9d52-168a-4612-8833-0ab07ea28307:2026-04-22T18:05:57.205Z": {"agent_id": {"tool": "claude_code", "model": ""}, "human_author": "arjun.narain@razorpay.com", "accepted_lines": 175, "overriden_lines": 0}, "a53a9d52-168a-4612-8833-0ab07ea28307:2026-04-22T18:05:47.238Z": {"agent_id": {"tool": "claude_code", "model": ""}, "human_author": "arjun.narain@razorpay.com", "accepted_lines": 175, "overriden_lines": 0}, "a53a9d52-168a-4612-8833-0ab07ea28307:2026-04-22T18:06:08.975Z": {"agent_id": {"tool": "claude_code", "model": ""}, "human_author": "arjun.narain@razorpay.com", "accepted_lines": 175, "overriden_lines": 0}, "a53a9d52-168a-4612-8833-0ab07ea28307:2026-04-22T18:05:25.480Z": {"agent_id": {"tool": "claude_code", "model": ""}, "human_author": "arjun.narain@razorpay.com", "accepted_lines": 175, "overriden_lines": 0}, "a53a9d52-168a-4612-8833-0ab07ea28307:2026-04-22T17:56:51.966Z": {"agent_id": {"tool": "claude_code", "model": ""}, "human_author": "arjun.narain@razorpay.com", "accepted_lines": 1, "overriden_lines": 0}, "a53a9d52-168a-4612-8833-0ab07ea28307:2026-04-22T17:53:21.404Z": {"agent_id": {"tool": "claude_code", "model": ""}, "human_author": "arjun.narain@razorpay.com", "accepted_lines": 5, "overriden_lines": 0}, "a53a9d52-168a-4612-8833-0ab07ea28307:2026-04-22T17:52:45.095Z": {"agent_id": {"tool": "claude_code", "model": ""}, "human_author": "arjun.narain@razorpay.com", "accepted_lines": 3, "overriden_lines": 0}, "a53a9d52-168a-4612-8833-0ab07ea28307:2026-04-22T17:56:35.768Z": {"agent_id": {"tool": "claude_code", "model": ""}, "human_author": "arjun.narain@razorpay.com", "accepted_lines": 5, "overriden_lines": 0}}}
