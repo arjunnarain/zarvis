@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { apiFetch } from '../lib/api';
 
 interface Props {
   sessionId: string;
@@ -26,7 +27,7 @@ export default function DocumentUpload({ sessionId, onUploaded }: Props) {
     form.append('session_id', sessionId);
     form.append('file', file);
     try {
-      const res = await fetch('/api/upload', { method: 'POST', body: form });
+      const res = await apiFetch('/api/upload', { method: 'POST', body: form });
       if (!res.ok) { const t = await res.text(); throw new Error(t); }
       const doc = await res.json();
       onUploaded({ id: doc.id, filename: doc.filename });
@@ -39,7 +40,7 @@ export default function DocumentUpload({ sessionId, onUploaded }: Props) {
     setUploading(true);
     setLoadingLabel(sample?.label ?? sampleId);
     try {
-      const res = await fetch('/api/sample', {
+      const res = await apiFetch('/api/sample', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ session_id: sessionId, sample: sampleId }),

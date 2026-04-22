@@ -12,8 +12,17 @@ import (
 
 var ErrNotFound = errors.New("not found")
 
+type User struct {
+	ID           string    `json:"id"`
+	Email        string    `json:"email"`
+	PasswordHash string    `json:"-"`
+	Name         string    `json:"name"`
+	CreatedAt    time.Time `json:"created_at"`
+}
+
 type Session struct {
 	ID            string    `json:"id"`
+	UserID        string    `json:"user_id"`
 	PrimaryAnimal string    `json:"primary_animal"`
 	CreatedAt     time.Time `json:"created_at"`
 	UpdatedAt     time.Time `json:"updated_at"`
@@ -63,7 +72,11 @@ type Forest struct {
 }
 
 type Store interface {
-	CreateSession(animal string) (*Session, error)
+	CreateUser(email, passwordHash, name string) (*User, error)
+	GetUserByEmail(email string) (*User, error)
+	GetUserByID(id string) (*User, error)
+
+	CreateSession(userID, animal string) (*Session, error)
 	GetSession(id string) (*Session, error)
 	UpdateSession(s *Session) error
 
@@ -109,8 +122,16 @@ func NewSQLiteStore(path string) (*SQLiteStore, error) {
 }
 
 const schema = `
+CREATE TABLE IF NOT EXISTS users (
+    id TEXT PRIMARY KEY,
+    email TEXT UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    name TEXT NOT NULL DEFAULT '',
+    created_at DATETIME NOT NULL
+);
 CREATE TABLE IF NOT EXISTS sessions (
     id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL DEFAULT '',
     primary_animal TEXT NOT NULL DEFAULT '',
     created_at DATETIME NOT NULL,
     updated_at DATETIME NOT NULL
@@ -170,20 +191,48 @@ CREATE TABLE IF NOT EXISTS chunks (
 CREATE INDEX IF NOT EXISTS idx_chunks_forest ON chunks(forest_id);
 `
 
-func (s *SQLiteStore) CreateSession(animal string) (*Session, error) {
+func (s *SQLiteStore) CreateUser(email, passwordHash, name string) (*User, error) {
 	now := time.Now().UTC()
-	sess := &Session{ID: uuid.NewString(), PrimaryAnimal: animal, CreatedAt: now, UpdatedAt: now}
+	user := &User{ID: uuid.NewString(), Email: email, PasswordHash: passwordHash, Name: name, CreatedAt: now}
+	_, err := s.db.Exec(`INSERT INTO users (id, email, password_hash, name, created_at) VALUES (?,?,?,?,?)`,
+		user.ID, user.Email, user.PasswordHash, user.Name, user.CreatedAt)
+	return user, err
+}
+
+func (s *SQLiteStore) GetUserByID(id string) (*User, error) {
+	var u User
+	err := s.db.QueryRow(`SELECT id, email, password_hash, name, created_at FROM users WHERE id=?`, id).
+		Scan(&u.ID, &u.Email, &u.PasswordHash, &u.Name, &u.CreatedAt)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrNotFound
+	}
+	return &u, err
+}
+
+func (s *SQLiteStore) GetUserByEmail(email string) (*User, error) {
+	var u User
+	err := s.db.QueryRow(`SELECT id, email, password_hash, name, created_at FROM users WHERE email=?`, email).
+		Scan(&u.ID, &u.Email, &u.PasswordHash, &u.Name, &u.CreatedAt)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrNotFound
+	}
+	return &u, err
+}
+
+func (s *SQLiteStore) CreateSession(userID, animal string) (*Session, error) {
+	now := time.Now().UTC()
+	sess := &Session{ID: uuid.NewString(), UserID: userID, PrimaryAnimal: animal, CreatedAt: now, UpdatedAt: now}
 	_, err := s.db.Exec(
-		`INSERT INTO sessions (id, primary_animal, created_at, updated_at) VALUES (?,?,?,?)`,
-		sess.ID, sess.PrimaryAnimal, sess.CreatedAt, sess.UpdatedAt)
+		`INSERT INTO sessions (id, user_id, primary_animal, created_at, updated_at) VALUES (?,?,?,?,?)`,
+		sess.ID, sess.UserID, sess.PrimaryAnimal, sess.CreatedAt, sess.UpdatedAt)
 	return sess, err
 }
 
 func (s *SQLiteStore) GetSession(id string) (*Session, error) {
 	var sess Session
 	err := s.db.QueryRow(
-		`SELECT id, primary_animal, created_at, updated_at FROM sessions WHERE id = ?`, id,
-	).Scan(&sess.ID, &sess.PrimaryAnimal, &sess.CreatedAt, &sess.UpdatedAt)
+		`SELECT id, user_id, primary_animal, created_at, updated_at FROM sessions WHERE id = ?`, id,
+	).Scan(&sess.ID, &sess.UserID, &sess.PrimaryAnimal, &sess.CreatedAt, &sess.UpdatedAt)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, ErrNotFound
 	}

@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MODULES } from './ModuleTabs';
 import DocumentUpload from './DocumentUpload';
 import SpiritOrb from './SpiritOrb';
+import { apiFetch } from '../lib/api';
 
 interface ToolCall { tool: string; display_name: string }
 interface Message {
@@ -71,7 +72,7 @@ export default function Chat({ sessionId, module, isActive, hasDocument, activeF
     try {
       const curSession = sessionRef.current;
       const curModule = moduleRef.current;
-      const res = await fetch('/api/chat', {
+      const res = await apiFetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

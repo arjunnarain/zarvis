@@ -5,6 +5,8 @@ import ModuleTabs from './components/ModuleTabs';
 import BadgeShelf from './components/BadgeShelf';
 import DocumentList, { type DocInfo } from './components/DocumentList';
 import ForestManager, { type ForestInfo } from './components/ForestManager';
+import AuthScreen from './components/AuthScreen';
+import { getToken, clearToken, apiFetch } from './lib/api';
 
 export interface Session {
   id: string;
@@ -18,6 +20,16 @@ const FOREST_NAMES = [
 ];
 
 export default function App() {
+  const [authed, setAuthed] = useState(!!getToken());
+
+  if (!authed) {
+    return <AuthScreen onAuth={() => setAuthed(true)} />;
+  }
+
+  return <MainApp onLogout={() => { clearToken(); setAuthed(false); }} />;
+}
+
+function MainApp({ onLogout }: { onLogout: () => void }) {
   const [session, setSession] = useState<Session | null>(null);
   const [activeModule, setActiveModule] = useState('explorer');
   const [earnedBadges, setEarnedBadges] = useState<Set<string>>(new Set());
@@ -31,7 +43,7 @@ export default function App() {
   useEffect(() => {
     const stored = localStorage.getItem('zarvis_session_id');
     if (stored) {
-      fetch(`/api/session/${stored}`)
+      apiFetch(`/api/session/${stored}`)
         .then((r) => (r.ok ? r.json() : Promise.reject()))
         .then((s: Session) => {
           setSession(s);
@@ -46,7 +58,7 @@ export default function App() {
   }, []);
 
   const createSession = () => {
-    fetch('/api/session', {
+    apiFetch('/api/session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ primary_animal: '' }),
@@ -65,7 +77,7 @@ export default function App() {
     autoForestCreated.current = true;
     const name = FOREST_NAMES[Math.floor(Math.random() * FOREST_NAMES.length)];
     try {
-      const res = await fetch('/api/forest', {
+      const res = await apiFetch('/api/forest', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ session_id: sid, name }),
@@ -79,13 +91,13 @@ export default function App() {
   };
 
   const loadBadges = (sid: string) => {
-    fetch(`/api/session/${sid}/badges`).then((r) => r.json())
+    apiFetch(`/api/session/${sid}/badges`).then((r) => r.json())
       .then((b: Array<{ badge_key: string }>) => { if (b) setEarnedBadges(new Set(b.map((x) => x.badge_key))); })
       .catch(() => {});
   };
 
   const loadDocuments = (sid: string) => {
-    fetch(`/api/session/${sid}/documents`).then((r) => r.json())
+    apiFetch(`/api/session/${sid}/documents`).then((r) => r.json())
       .then((docs: DocInfo[]) => {
         setDocuments(docs ?? []);
         if (docs?.length > 0 && !activeDocId) setActiveDocId(docs[0].id);
@@ -93,7 +105,7 @@ export default function App() {
   };
 
   const loadForests = (sid: string) => {
-    fetch(`/api/session/${sid}/forests`).then((r) => r.json())
+    apiFetch(`/api/session/${sid}/forests`).then((r) => r.json())
       .then((f: ForestInfo[]) => {
         setForests(f ?? []);
         if (f?.length > 0 && !activeForestId) setActiveForestId(f[0].id);
@@ -108,7 +120,7 @@ export default function App() {
     // Auto-add to active forest and refresh count
     if (activeForestId) {
       try {
-        await fetch(`/api/forest/${activeForestId}/documents`, {
+        await apiFetch(`/api/forest/${activeForestId}/documents`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ document_id: doc.id }),
@@ -131,7 +143,7 @@ export default function App() {
   // Load forest docs whenever active forest changes
   useEffect(() => {
     if (!activeForestId) { setForestDocs([]); return; }
-    fetch(`/api/forest/${activeForestId}/documents`).then((r) => r.json())
+    apiFetch(`/api/forest/${activeForestId}/documents`).then((r) => r.json())
       .then((docs: Array<{ id: number; filename: string }>) => setForestDocs(docs ?? []))
       .catch(() => setForestDocs([]));
   }, [activeForestId, documents.length]); // re-fetch when docs change too
@@ -142,7 +154,7 @@ export default function App() {
         f.id === activeForestId ? { ...f, doc_count: f.doc_count + 1 } : f
       ));
       // Also refresh forest docs list
-      fetch(`/api/forest/${activeForestId}/documents`).then((r) => r.json())
+      apiFetch(`/api/forest/${activeForestId}/documents`).then((r) => r.json())
         .then((docs: Array<{ id: number; filename: string }>) => setForestDocs(docs ?? []))
         .catch(() => {});
     }
@@ -189,6 +201,11 @@ export default function App() {
           </div>
         </div>
         <BadgeShelf earnedKeys={earnedBadges} />
+        <button onClick={onLogout} className="text-[10px] text-neutral-600 hover:text-neutral-400 transition-colors" title="Sign out">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" />
+          </svg>
+        </button>
       </header>
 
       <ModuleTabs active={activeModule} onChange={setActiveModule} />
