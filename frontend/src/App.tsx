@@ -21,15 +21,16 @@ const FOREST_NAMES = [
 
 export default function App() {
   const [authed, setAuthed] = useState(!!getToken());
+  const [userName, setUserName] = useState(localStorage.getItem('zarvis_user_name') || '');
 
   if (!authed) {
-    return <AuthScreen onAuth={() => setAuthed(true)} />;
+    return <AuthScreen onAuth={(name) => { setUserName(name); setAuthed(true); }} />;
   }
 
-  return <MainApp onLogout={() => { clearToken(); setAuthed(false); }} />;
+  return <MainApp userName={userName} onLogout={() => { clearToken(); localStorage.removeItem('zarvis_user_name'); setAuthed(false); }} />;
 }
 
-function MainApp({ onLogout }: { onLogout: () => void }) {
+function MainApp({ userName, onLogout }: { userName: string; onLogout: () => void }) {
   const [session, setSession] = useState<Session | null>(null);
   const [activeModule, setActiveModule] = useState('explorer');
   const [earnedBadges, setEarnedBadges] = useState<Set<string>>(new Set());
@@ -217,6 +218,7 @@ function MainApp({ onLogout }: { onLogout: () => void }) {
             sessionId={session.id}
             module={mod}
             isActive={mod === activeModule}
+            userName={userName}
             hasDocument={documents.length > 0}
             activeForestId={activeForestId}
             forestDocs={forestDocs}

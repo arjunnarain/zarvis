@@ -26,40 +26,40 @@ func TestLoadRegistry_HasTools(t *testing.T) {
 	}
 }
 
-func TestToolsForModule_Devlog(t *testing.T) {
+func TestToolsForModule_Explorer(t *testing.T) {
 	r := setupTestRegistry(t)
-	tools := r.ToolsForModule("devlog")
+	tools := r.ToolsForModule("explorer")
 	if len(tools) == 0 {
-		t.Fatal("devlog module should have tools")
+		t.Fatal("explorer module should have tools")
 	}
 	for _, tool := range tools {
 		found := false
 		for _, m := range tool.Modules {
-			if m == "devlog" {
+			if m == "explorer" {
 				found = true
 				break
 			}
 		}
 		if !found {
-			t.Errorf("tool %s should not be in devlog module", tool.Name)
+			t.Errorf("tool %s should not be in explorer module", tool.Name)
 		}
 	}
 }
 
-func TestToolsForModule_Github(t *testing.T) {
+func TestToolsForModule_Oracle(t *testing.T) {
 	r := setupTestRegistry(t)
-	tools := r.ToolsForModule("github")
+	tools := r.ToolsForModule("oracle")
 	if len(tools) == 0 {
-		t.Fatal("github module should have tools")
+		t.Fatal("oracle module should have tools")
 	}
-	hasGHPRs := false
+	hasForest := false
 	for _, tool := range tools {
-		if tool.Name == "github_prs" {
-			hasGHPRs = true
+		if tool.Name == "get_forest_documents" {
+			hasForest = true
 		}
 	}
-	if !hasGHPRs {
-		t.Error("github module should include github_prs tool")
+	if !hasForest {
+		t.Error("oracle module should include get_forest_documents tool")
 	}
 }
 
@@ -88,6 +88,17 @@ func TestToolsHaveRequiredFields(t *testing.T) {
 		}
 		if len(tool.InputSchema) == 0 {
 			t.Errorf("tool %s has empty input_schema", tool.Name)
+		}
+	}
+}
+
+func TestAllModulesHaveTools(t *testing.T) {
+	r := setupTestRegistry(t)
+	modules := []string{"explorer", "table", "schema", "summary", "oracle"}
+	for _, mod := range modules {
+		tools := r.ToolsForModule(mod)
+		if len(tools) == 0 {
+			t.Errorf("module %s should have at least one tool", mod)
 		}
 	}
 }

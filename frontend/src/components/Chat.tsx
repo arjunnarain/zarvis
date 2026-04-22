@@ -17,6 +17,7 @@ interface Props {
   sessionId: string;
   module: string;
   isActive: boolean;
+  userName: string;
   hasDocument: boolean;
   activeForestId: number | null;
   forestDocs: Array<{ id: number; filename: string }>;
@@ -32,7 +33,7 @@ const SUGGESTED_PROMPTS: Record<string, string[]> = {
   oracle: ['Compare all documents in this forest', 'Find common patterns', 'Summarize everything', 'What are the differences?'],
 };
 
-export default function Chat({ sessionId, module, isActive, hasDocument, activeForestId, forestDocs, onBadgeEarned, onDocumentUploaded }: Props) {
+export default function Chat({ sessionId, module, isActive, userName, hasDocument, activeForestId, forestDocs, onBadgeEarned, onDocumentUploaded }: Props) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [streaming, setStreaming] = useState(false);
@@ -120,14 +121,15 @@ export default function Chat({ sessionId, module, isActive, hasDocument, activeF
     if (!isActive || greetingSent.current || !sessionId) return;
     greetingSent.current = true;
     const mod = moduleRef.current;
+    const nameHint = userName ? ` IMPORTANT: The user's name is "${userName}". You MUST greet them as "${userName}" — never use "friend", "traveller", or generic terms.` : '';
     let greeting: string;
     if (hasDocument) {
       const toolHint = mod === 'oracle'
         ? 'Use get_forest_documents or query_forest tools to access the data.'
         : 'Use your available tools to read the document data. Do NOT ask me to paste content.';
-      greeting = `I switched to the ${mod} tab. I have documents uploaded. ${toolHint}`;
+      greeting = `I switched to the ${mod} tab. I have documents uploaded. ${toolHint}${nameHint}`;
     } else {
-      greeting = 'Hello, I just arrived.';
+      greeting = `Hello, I just arrived.${nameHint}`;
     }
     doSend(greeting, true);
   // eslint-disable-next-line react-hooks/exhaustive-deps

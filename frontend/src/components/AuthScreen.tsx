@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { setToken } from '../lib/api';
 
 interface Props {
-  onAuth: () => void;
+  onAuth: (userName: string) => void;
 }
 
 export default function AuthScreen({ onAuth }: Props) {
@@ -38,7 +38,8 @@ export default function AuthScreen({ onAuth }: Props) {
       }
 
       setToken(data.token);
-      onAuth();
+      localStorage.setItem('zarvis_user_name', data.user?.name || data.user?.email || '');
+      onAuth(data.user?.name || data.user?.email || '');
     } catch {
       setError('Connection failed');
     } finally {
