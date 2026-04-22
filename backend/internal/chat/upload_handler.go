@@ -12,6 +12,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
+	"github.com/zarvis/internal/analyze"
 	"github.com/zarvis/internal/state"
 )
 
@@ -53,8 +54,31 @@ func (h *Handler) Upload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Server-side analysis: detect type, infer schema, run data quality check
+	preAnalysis := analyze.InferSchema(content)
+	cleanReport := analyze.CleanAnalysis(content, preAnalysis)
+	analysisJSON, _ := json.Marshal(map[string]any{
+		"doc_type":     preAnalysis.DocType,
+		"row_count":    preAnalysis.RowCount,
+		"field_count":  preAnalysis.FieldCount,
+		"fields":       preAnalysis.Fields,
+		"issues":       preAnalysis.Issues,
+		"clean_report": cleanReport,
+	})
+	// Store pre-analysis as initial schema
+	_ = h.Store.UpdateDocumentStructured(doc.ID, "", string(analysisJSON), "")
+
 	h.Badges.CheckAndAward(sessionID, "upload")
-	writeJSON(w, http.StatusCreated, doc)
+
+	// Return doc with pre-analysis attached
+	response := map[string]any{
+		"id":           doc.ID,
+		"session_id":   doc.SessionID,
+		"filename":     doc.Filename,
+		"created_at":   doc.CreatedAt,
+		"pre_analysis": preAnalysis,
+	}
+	writeJSON(w, http.StatusCreated, response)
 }
 
 // GetDocument returns the latest document with structured data.
