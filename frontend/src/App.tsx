@@ -6,6 +6,7 @@ import BadgeShelf from './components/BadgeShelf';
 import DocumentList, { type DocInfo } from './components/DocumentList';
 import ForestManager, { type ForestInfo } from './components/ForestManager';
 import AuthScreen from './components/AuthScreen';
+import ExportModal from './components/ExportModal';
 import { getToken, clearToken, apiFetch } from './lib/api';
 
 export interface Session {
@@ -39,6 +40,7 @@ function MainApp({ userName, onLogout }: { userName: string; onLogout: () => voi
   const [docListOpen, setDocListOpen] = useState(false);
   const [forests, setForests] = useState<ForestInfo[]>([]);
   const [activeForestId, setActiveForestId] = useState<number | null>(null);
+  const [showExport, setShowExport] = useState(false);
   const autoForestCreated = useRef(false);
 
   useEffect(() => {
@@ -202,6 +204,13 @@ function MainApp({ userName, onLogout }: { userName: string; onLogout: () => voi
           </div>
         </div>
         <BadgeShelf earnedKeys={earnedBadges} />
+        {documents.length > 0 && (
+          <button onClick={() => setShowExport(true)} className="text-neutral-500 hover:text-neutral-300 transition-colors" title="Export data">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
+            </svg>
+          </button>
+        )}
         <button onClick={onLogout} className="text-[10px] text-neutral-600 hover:text-neutral-400 transition-colors" title="Sign out">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" />
@@ -227,6 +236,10 @@ function MainApp({ userName, onLogout }: { userName: string; onLogout: () => voi
           />
         </div>
       ))}
+
+      {showExport && (
+        <ExportModal sessionId={session.id} onClose={() => setShowExport(false)} />
+      )}
     </div>
   );
 }

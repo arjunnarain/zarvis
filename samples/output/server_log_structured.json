@@ -1,0 +1,26 @@
+{
+  "entries": [
+    {"timestamp": "2024-03-15T08:23:14.332Z", "level": "INFO", "message": "server started on :8080", "pid": 14523},
+    {"timestamp": "2024-03-15T08:23:14.335Z", "level": "INFO", "message": "connected to postgres://db.internal:5432/prod"},
+    {"timestamp": "2024-03-15T08:24:01.445Z", "level": "INFO", "method": "POST", "path": "/api/users", "status": 201, "durationMs": 45, "userId": "usr_8834"},
+    {"timestamp": "2024-03-15T08:24:02.112Z", "level": "WARN", "message": "rate limit approaching", "ip": "203.0.113.42", "current": 78, "limit": 100},
+    {"timestamp": "2024-03-15T08:25:33.891Z", "level": "ERROR", "method": "POST", "path": "/api/payments", "status": 500, "durationMs": 234, "error": "stripe: card_declined", "userId": "usr_7721", "amount": 49.99},
+    {"timestamp": "2024-03-15T08:25:34.002Z", "level": "WARN", "message": "payment retry scheduled", "userId": "usr_7721", "attempt": 1},
+    {"timestamp": "2024-03-15T08:26:01.123Z", "level": "INFO", "method": "GET", "path": "/api/products", "status": 200, "durationMs": 8, "count": 47},
+    {"timestamp": "2024-03-15T08:27:12.334Z", "level": "ERROR", "method": "GET", "path": "/api/users/usr_0000", "status": 404, "durationMs": 3, "error": "user not found"},
+    {"timestamp": "2024-03-15T08:29:11.445Z", "level": "ERROR", "method": "POST", "path": "/api/payments", "status": 500, "durationMs": 1023, "error": "stripe: timeout", "userId": "usr_5543", "amount": 299.00},
+    {"timestamp": "2024-03-15T08:29:11.890Z", "level": "ERROR", "message": "payment gateway timeout, circuit breaker OPEN"},
+    {"timestamp": "2024-03-15T08:30:02.334Z", "level": "INFO", "message": "circuit breaker: CLOSED, payments resumed"},
+    {"timestamp": "2024-03-15T08:30:15.667Z", "level": "INFO", "method": "POST", "path": "/api/payments", "status": 200, "durationMs": 89, "userId": "usr_5543", "amount": 299.00},
+    {"timestamp": "2024-03-15T08:31:00.001Z", "level": "INFO", "message": "metrics", "rps": 124, "p50Ms": 12, "p99Ms": 234, "errors": "3/1847"}
+  ],
+  "summary": {
+    "totalEntries": 13,
+    "byLevel": {"INFO": 7, "WARN": 2, "ERROR": 4},
+    "uniqueEndpoints": ["/api/users", "/api/payments", "/api/products", "/api/users/usr_0000"],
+    "errorRate": "3/13 (23%)",
+    "circuitBreakerEvents": ["OPEN at 08:29:11", "CLOSED at 08:30:02"],
+    "paymentFailures": 2,
+    "timeRange": "08:23:14 - 08:31:00 (7m 46s)"
+  }
+}

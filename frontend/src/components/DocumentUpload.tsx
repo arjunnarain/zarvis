@@ -8,10 +8,14 @@ interface Props {
 }
 
 const SAMPLES = [
-  { id: 'messy_csv', label: 'Messy CSV', icon: '📊', desc: 'Inconsistent dates, missing values, mixed formats' },
-  { id: 'invoice', label: 'Invoice', icon: '🧾', desc: 'Unstructured text invoice with line items' },
-  { id: 'server_log', label: 'Server Log', icon: '🖥️', desc: 'Mixed log levels, errors, metrics' },
-  { id: 'api_response', label: 'Nested JSON', icon: '🔗', desc: 'Deeply nested API response with departments' },
+  { id: 'messy_csv', label: 'Messy Employee CSV', icon: '📊', desc: '10 rows with 5 date formats, $ vs plain numbers, missing names, "eighty thousand" as salary' },
+  { id: 'invoice', label: 'Cloud Invoice', icon: '🧾', desc: 'Unstructured text — line items, addresses, tax math. No schema at all.' },
+  { id: 'server_log', label: 'Server Crash Log', icon: '🖥️', desc: '20 log entries with circuit breaker events, errors, latency metrics, mixed levels' },
+  { id: 'api_response', label: 'Org Chart JSON', icon: '🔗', desc: '3 levels deep — departments → teams → projects, plus financial metrics' },
+  { id: 'support_tickets', label: 'Support Tickets', icon: '🎫', desc: 'Semi-structured email dump — timestamps, priorities, agents, mixed formatting' },
+  { id: 'bank_statement', label: 'Bank Statement', icon: '🏦', desc: 'Tab-separated transactions with credits/debits, running balance, date ranges' },
+  { id: 'resume', label: 'Resume / CV', icon: '👤', desc: 'Free-form text with education, experience, skills — entity extraction challenge' },
+  { id: 'config_yaml', label: 'K8s Config', icon: '⚙️', desc: 'YAML deployment with nested specs, env vars, resource limits — hierarchical data' },
 ];
 
 export default function DocumentUpload({ sessionId, onUploaded }: Props) {
@@ -109,7 +113,7 @@ export default function DocumentUpload({ sessionId, onUploaded }: Props) {
           <div className="text-[11px] text-neutral-500 text-center mb-2">
             or try a sample messy document
           </div>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {SAMPLES.map((sample, idx) => (
               <motion.button
                 key={sample.id}

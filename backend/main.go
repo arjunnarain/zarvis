@@ -112,6 +112,8 @@ func main() {
 		r.Get("/api/session/{id}/badges", h.GetBadges)
 		r.Get("/api/session/{id}/document", h.GetDocument)
 		r.Get("/api/session/{id}/documents", h.ListDocuments)
+		r.Get("/api/session/{id}/export", h.Export)
+		r.Get("/api/session/{id}/export-schema", h.ExportSchema)
 		r.Post("/api/upload", h.Upload)
 		r.Post("/api/sample", h.LoadSample)
 		r.Post("/api/forest", h.CreateForest)

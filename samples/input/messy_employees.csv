@@ -1,0 +1,11 @@
+Name,  Age, City,  Salary, Start Date, Email
+Alice Smith, 30, New York, $85,000, 01/15/2023, alice@company.com
+Bob Johnson,  25,San Francisco,92000, 2023-03-22, bob@company.com
+Charlie Brown, 35, Chicago, $78000,  March 1 2022, charlie@company
+Diana Prince, , NYC, 95000.00, 15-Jan-2024, diana@company.com
+Eve Wilson, 32, SF, $88,000, 2023/07/10,
+Frank Miller, 28, New York, eighty thousand, 01-2023, frank@company.com
+, 45, Boston, $102,000, 2022-06-01, grace@company.com
+Henry Lee, 31, Chicago, 76000, 04/20/2023, henry@company.com
+Ivy Chen, NOT_AVAILABLE, San Francisco, $91,000, 2023-08-15, ivy@company.com
+Jack Davis, 29, NYC, $87500, Aug 2023, jack@company.com

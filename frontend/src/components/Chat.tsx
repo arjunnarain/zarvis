@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, Suspense, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MODULES } from './ModuleTabs';
 import DocumentUpload from './DocumentUpload';
+import RawViewer from './RawViewer';
 import SpiritOrb from './SpiritOrb';
 import { apiFetch } from '../lib/api';
 
@@ -41,6 +42,7 @@ export default function Chat({ sessionId, module, isActive, userName, hasDocumen
   const [showUploadPanel, setShowUploadPanel] = useState(false);
   const [showMentions, setShowMentions] = useState(false);
   const [activeTools, setActiveTools] = useState<string[]>([]);
+  const [showRawViewer, setShowRawViewer] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const streamingRef = useRef(false);
   const greetingSent = useRef(false);
@@ -253,7 +255,7 @@ export default function Chat({ sessionId, module, isActive, userName, hasDocumen
 
             {/* Parse button after upload */}
             {uploadedNeedsParse && !streaming && (
-              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="flex gap-2 pt-2">
+              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="flex flex-wrap gap-2 pt-2">
                 <button
                   onClick={() => { setUploadedNeedsParse(false); doSend('Please parse this document into structured data.'); }}
                   className="px-4 py-2 text-xs bg-indigo-500 text-white rounded-lg hover:bg-indigo-400 transition-colors flex items-center gap-2"
@@ -265,6 +267,15 @@ export default function Chat({ sessionId, module, isActive, userName, hasDocumen
                   className="px-4 py-2 text-xs bg-neutral-800 text-neutral-300 border border-neutral-700 rounded-lg hover:bg-neutral-700 transition-colors"
                 >
                   Quick summary first
+                </button>
+                <button
+                  onClick={() => setShowRawViewer(true)}
+                  className="px-4 py-2 text-xs bg-neutral-800 text-neutral-300 border border-neutral-700 rounded-lg hover:bg-neutral-700 transition-colors flex items-center gap-1.5"
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" />
+                  </svg>
+                  View raw file
                 </button>
               </motion.div>
             )}
@@ -345,6 +356,10 @@ export default function Chat({ sessionId, module, isActive, userName, hasDocumen
           </button>
         </div>
       </div>
+
+      {showRawViewer && (
+        <RawViewer sessionId={sessionId} onClose={() => setShowRawViewer(false)} />
+      )}
     </div>
   );
 }

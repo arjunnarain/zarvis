@@ -1,0 +1,40 @@
+{
+  "invoice": {
+    "number": "INV-2024-0847",
+    "date": "2024-03-15",
+    "dueDate": "2024-04-14",
+    "purchaseOrder": "GC-2024-1122",
+    "paymentTerms": "Net 30"
+  },
+  "from": {
+    "company": "Acme Cloud Services LLC",
+    "address": "123 Tech Boulevard, Suite 400, San Francisco, CA 94105",
+    "taxId": "82-1234567"
+  },
+  "to": {
+    "company": "GlobalCorp Industries",
+    "address": "456 Enterprise Ave, New York, NY 10001",
+    "attention": "Accounts Payable"
+  },
+  "lineItems": [
+    {"description": "Cloud Compute (m5.xlarge)", "quantity": 720, "unit": "hrs", "unitPrice": 0.192, "amount": 138.24},
+    {"description": "Cloud Compute (c5.2xlarge)", "quantity": 360, "unit": "hrs", "unitPrice": 0.340, "amount": 122.40},
+    {"description": "Object Storage (S3)", "quantity": 2.4, "unit": "TB", "unitPrice": 23.00, "amount": 55.20},
+    {"description": "Data Transfer (outbound)", "quantity": 850, "unit": "GB", "unitPrice": 0.09, "amount": 76.50},
+    {"description": "Managed Database (db.r5.large)", "quantity": 720, "unit": "hrs", "unitPrice": 0.250, "amount": 180.00},
+    {"description": "Load Balancer", "quantity": 1, "unit": "mo", "unitPrice": 18.00, "amount": 18.00},
+    {"description": "SSL Certificate", "quantity": 3, "unit": null, "unitPrice": 0, "amount": 0},
+    {"description": "Premium Support", "quantity": 1, "unit": "mo", "unitPrice": 100.00, "amount": 100.00}
+  ],
+  "totals": {
+    "subtotal": 690.34,
+    "taxRate": 0.08875,
+    "tax": 61.27,
+    "total": 751.61
+  },
+  "payment": {
+    "bank": "Chase Bank",
+    "accountNumber": "4455667788",
+    "routingNumber": "021000021"
+  }
+}

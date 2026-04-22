@@ -1,0 +1,22 @@
+{
+  "employees": [
+    {"name": "Alice Smith", "age": 30, "city": "New York", "salary": 85000, "startDate": "2023-01-15", "email": "alice@company.com"},
+    {"name": "Bob Johnson", "age": 25, "city": "San Francisco", "salary": 92000, "startDate": "2023-03-22", "email": "bob@company.com"},
+    {"name": "Charlie Brown", "age": 35, "city": "Chicago", "salary": 78000, "startDate": "2022-03-01", "email": "charlie@company", "issues": ["incomplete email domain"]},
+    {"name": "Diana Prince", "age": null, "city": "New York", "salary": 95000, "startDate": "2024-01-15", "email": "diana@company.com", "issues": ["missing age"]},
+    {"name": "Eve Wilson", "age": 32, "city": "San Francisco", "salary": 88000, "startDate": "2023-07-10", "email": null, "issues": ["missing email"]},
+    {"name": "Frank Miller", "age": 28, "city": "New York", "salary": null, "startDate": null, "email": "frank@company.com", "issues": ["salary 'eighty thousand' not numeric", "date '01-2023' ambiguous"]},
+    {"name": null, "age": 45, "city": "Boston", "salary": 102000, "startDate": "2022-06-01", "email": "grace@company.com", "issues": ["missing name"]},
+    {"name": "Henry Lee", "age": 31, "city": "Chicago", "salary": 76000, "startDate": "2023-04-20", "email": "henry@company.com"},
+    {"name": "Ivy Chen", "age": null, "city": "San Francisco", "salary": 91000, "startDate": "2023-08-15", "email": "ivy@company.com", "issues": ["age 'NOT_AVAILABLE'"]},
+    {"name": "Jack Davis", "age": 29, "city": "New York", "salary": 87500, "startDate": "2023-08-01", "email": "jack@company.com"}
+  ],
+  "dataQuality": {
+    "totalRows": 10,
+    "issueCount": 6,
+    "dateFormatsFound": ["MM/DD/YYYY", "YYYY-MM-DD", "Month D YYYY", "DD-Mon-YYYY", "YYYY/MM/DD", "Mon YYYY"],
+    "salaryFormats": ["$XX,XXX", "XXXXX", "$XXXXX", "XXXXX.XX", "text ('eighty thousand')"],
+    "cityNormalization": {"NYC": "New York", "SF": "San Francisco"},
+    "missingValues": {"name": 1, "age": 2, "email": 1, "salary": 1}
+  }
+}

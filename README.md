@@ -175,13 +175,26 @@ zarvis/
 | `/api/forest` | POST | Create forest |
 | `/api/forest/{id}/documents` | GET/POST/DELETE | Forest documents / clear |
 | `/api/chat` | POST | Stream chat `{session_id, module, message}` |
+| `/api/session/{id}/export?format=` | GET | Export structured data (json/csv/tsv/markdown) |
+| `/api/session/{id}/export-schema` | GET | Export inferred schema as JSON |
 
 ### SSE Events
 `delta` · `tool_use` · `tool_result` · `badge` · `done` · `error`
+
+## Sample Input/Output
+
+The [`samples/`](samples/) directory contains example messy documents and their expected structured outputs:
+
+| Input | What's messy | Output |
+|-------|-------------|--------|
+| [`messy_employees.csv`](samples/input/messy_employees.csv) | 5 date formats, `$85,000` vs `eighty thousand`, missing fields | [`structured JSON`](samples/output/messy_employees_structured.json) with normalized data + quality report |
+| [`invoice_INV-2024-0847.txt`](samples/input/invoice_INV-2024-0847.txt) | Plain text, no schema, mixed formatting | [`structured JSON`](samples/output/invoice_structured.json) with line items, totals, payment info |
+| [`server_access.log`](samples/input/server_access.log) | Mixed log levels, embedded key-values, circuit breaker events | [`structured JSON`](samples/output/server_log_structured.json) with parsed entries + summary stats |
+
+See [`samples/README.md`](samples/README.md) for full details on each sample.
 
 ## What I Deliberately Left Out
 
 - **Vector embeddings** — BM25 handles keyword retrieval well at demo scale. Production path: ONNX sentence embeddings via the Hugot library, swapping only the scoring function.
 - **Multi-user document sharing** — Documents are scoped to sessions. Would add team/org model.
-- **Export** — Structured data is JSON in SQLite. Would add CSV/Excel/API export.
 - **Scheduled processing** — All parsing is on-demand. Would add background job queue for large documents.
