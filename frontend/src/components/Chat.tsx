@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MODULES } from './ModuleTabs';
 import DocumentUpload from './DocumentUpload';
 import RawViewer from './RawViewer';
+import SearchPanel from './SearchPanel';
 import SpiritOrb from './SpiritOrb';
 import { apiFetch } from '../lib/api';
 
@@ -31,6 +32,7 @@ const SUGGESTED_PROMPTS: Record<string, string[]> = {
   table: ['Show the data as a table', 'Sort by the largest values', 'Show only rows with missing data', 'Calculate totals and averages'],
   schema: ['Infer the schema for this data', 'What field types are present?', 'Are there any enum fields?', 'Show data quality report'],
   summary: ['Summarize this document', 'What are the key findings?', 'Generate a brief report', 'What patterns do you see?'],
+  graphs: ['What charts can you make from this data?', 'Show a bar chart of the top values', 'Show a pie chart breakdown', 'Plot a trend line'],
   oracle: ['Compare all documents in this forest', 'Find common patterns', 'Summarize everything', 'What are the differences?'],
 };
 
@@ -43,6 +45,7 @@ export default function Chat({ sessionId, module, isActive, userName, hasDocumen
   const [showMentions, setShowMentions] = useState(false);
   const [activeTools, setActiveTools] = useState<string[]>([]);
   const [showRawViewer, setShowRawViewer] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const streamingRef = useRef(false);
   const greetingSent = useRef(false);
@@ -52,7 +55,9 @@ export default function Chat({ sessionId, module, isActive, userName, hasDocumen
   moduleRef.current = module;
 
   const showInitialUpload = greetingDone && !hasDocument && !streaming && module === 'explorer';
-  const showSuggestions = greetingDone && hasDocument && !streaming && messages.filter(m => !m.hidden && m.role === 'user').length === 0;
+  // Show suggestions when not streaming and the last message is from assistant
+  const lastVisible = messages.filter(m => !m.hidden).at(-1);
+  const showSuggestions = greetingDone && hasDocument && !streaming && (!lastVisible || lastVisible.role === 'assistant');
   const moduleDef = MODULES.find((m) => m.id === module);
   const suggestions = SUGGESTED_PROMPTS[module] ?? [];
 
@@ -188,7 +193,8 @@ export default function Chat({ sessionId, module, isActive, userName, hasDocumen
   const showWelcome = !greetingDone && messages.length === 0;
 
   return (
-    <div className="flex-1 flex flex-col min-h-0">
+    <div className="flex-1 flex min-h-0">
+      <div className="flex-1 flex flex-col min-h-0">
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 pb-2 scroll-smooth">
         {showWelcome && (
           <div className="flex flex-col items-center justify-center h-full gap-3">
@@ -326,6 +332,19 @@ export default function Chat({ sessionId, module, isActive, userName, hasDocumen
       {/* Input bar */}
       <div className="px-4 pt-2 pb-4">
         <div className="flex items-center gap-2 bg-neutral-900/90 border border-neutral-800/70 rounded-xl px-3 py-2 focus-within:border-neutral-600/60 transition-colors">
+          {/* Search toggle (explorer only) */}
+          {module === 'explorer' && hasDocument && (
+            <button
+              onClick={() => setShowSearch((s) => !s)}
+              className={`w-7 h-7 flex items-center justify-center rounded-lg transition-colors flex-shrink-0 ${
+                showSearch ? 'bg-indigo-500/20 text-indigo-400' : 'text-neutral-500 hover:text-neutral-300 hover:bg-neutral-800'
+              }`}
+              title="Search document">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
+              </svg>
+            </button>
+          )}
           <button
             onClick={() => setShowUploadPanel((p) => !p)}
             className={`w-7 h-7 flex items-center justify-center rounded-lg transition-colors flex-shrink-0 ${
@@ -360,6 +379,18 @@ export default function Chat({ sessionId, module, isActive, userName, hasDocumen
       {showRawViewer && (
         <RawViewer sessionId={sessionId} onClose={() => setShowRawViewer(false)} />
       )}
+      </div>{/* end inner column */}
+
+      {/* Search panel */}
+      <AnimatePresence>
+        {showSearch && module === 'explorer' && (
+          <SearchPanel
+            sessionId={sessionId}
+            onInsertQuery={(q) => { setInput(q); setShowSearch(false); }}
+            onClose={() => setShowSearch(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -388,7 +419,16 @@ function renderContent(text: string): ReactNode {
   const blocks = text.split(/(```[\s\S]*?```|\n\|[^\n]*\|(?:\n\|[^\n]*\|)*\n?)/g);
   return blocks.map((block, i) => {
     if (block.startsWith('```') && block.endsWith('```')) {
-      const code = block.slice(3, -3).replace(/^\w+\n/, '');
+      const inner = block.slice(3, -3);
+      // Chart rendering
+      if (inner.startsWith('chart\n') || inner.startsWith('chart{')) {
+        const jsonStr = inner.replace(/^chart\n?/, '');
+        try {
+          const chart = JSON.parse(jsonStr);
+          return <InlineChart key={i} chart={chart} />;
+        } catch { /* fall through to code block */ }
+      }
+      const code = inner.replace(/^\w+\n/, '');
       return <pre key={i} className="bg-neutral-900/80 rounded-lg px-3 py-2 my-2 text-xs overflow-x-auto font-mono text-neutral-300">{code}</pre>;
     }
     if (block.includes('|') && block.trim().startsWith('|')) return renderTable(block, i);
@@ -431,4 +471,112 @@ function renderInline(text: string): ReactNode {
     if (part.startsWith('`') && part.endsWith('`')) return <code key={i} className="bg-neutral-900/60 px-1 py-0.5 rounded text-xs font-mono text-indigo-300">{part.slice(1, -1)}</code>;
     return <span key={i}>{part}</span>;
   });
+}
+
+// Inline SVG chart renderer
+interface ChartData {
+  type: string;
+  title?: string;
+  labels: string[];
+  datasets: Array<{ label: string; data: number[] }>;
+}
+
+const CHART_COLORS = ['#6366f1', '#f97316', '#22c55e', '#ef4444', '#eab308', '#14b8a6', '#c084fc', '#f472b6'];
+
+function InlineChart({ chart }: { chart: ChartData }) {
+  const { type, title, labels, datasets } = chart;
+  const data = datasets?.[0]?.data ?? [];
+  const maxVal = Math.max(...data, 1);
+  const w = 400;
+  const h = 220;
+  const pad = 40;
+
+  if (type === 'bar') {
+    const barW = Math.min(30, (w - pad * 2) / data.length - 4);
+    const chartH = h - pad * 2;
+    return (
+      <div className="my-3 bg-neutral-900/60 rounded-xl p-3 overflow-x-auto">
+        {title && <div className="text-xs font-medium text-neutral-300 mb-2">{title}</div>}
+        <svg width={w} height={h} className="text-neutral-400">
+          {data.map((val, i) => {
+            const barH = (val / maxVal) * chartH;
+            const x = pad + i * ((w - pad * 2) / data.length) + 2;
+            const y = h - pad - barH;
+            return (
+              <g key={i}>
+                <rect x={x} y={y} width={barW} height={barH} rx={3} fill={CHART_COLORS[i % CHART_COLORS.length]} opacity={0.85} />
+                <text x={x + barW / 2} y={h - pad + 14} textAnchor="middle" fontSize="9" fill="#737373">{(labels[i] ?? '').slice(0, 8)}</text>
+                <text x={x + barW / 2} y={y - 4} textAnchor="middle" fontSize="8" fill="#a3a3a3">{val.toLocaleString()}</text>
+              </g>
+            );
+          })}
+          <line x1={pad} y1={h - pad} x2={w - pad} y2={h - pad} stroke="#404040" strokeWidth="1" />
+        </svg>
+      </div>
+    );
+  }
+
+  if (type === 'pie') {
+    const total = data.reduce((a, b) => a + b, 0);
+    let angle = 0;
+    const cx = 100, cy = 100, r = 80;
+    return (
+      <div className="my-3 bg-neutral-900/60 rounded-xl p-3">
+        {title && <div className="text-xs font-medium text-neutral-300 mb-2">{title}</div>}
+        <div className="flex items-start gap-4">
+          <svg width={200} height={200}>
+            {data.map((val, i) => {
+              const sliceAngle = (val / total) * Math.PI * 2;
+              const startAngle = angle;
+              angle += sliceAngle;
+              const x1 = cx + r * Math.cos(startAngle);
+              const y1 = cy + r * Math.sin(startAngle);
+              const x2 = cx + r * Math.cos(startAngle + sliceAngle);
+              const y2 = cy + r * Math.sin(startAngle + sliceAngle);
+              const large = sliceAngle > Math.PI ? 1 : 0;
+              return (
+                <path key={i} d={`M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2} Z`}
+                  fill={CHART_COLORS[i % CHART_COLORS.length]} opacity={0.85} stroke="#171717" strokeWidth="1" />
+              );
+            })}
+          </svg>
+          <div className="space-y-1 pt-2">
+            {labels.map((label, i) => (
+              <div key={i} className="flex items-center gap-2 text-[10px] text-neutral-400">
+                <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: CHART_COLORS[i % CHART_COLORS.length] }} />
+                {label}: {data[i]?.toLocaleString()}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (type === 'line') {
+    const chartH = h - pad * 2;
+    const points = data.map((val, i) => ({
+      x: pad + (i / Math.max(data.length - 1, 1)) * (w - pad * 2),
+      y: h - pad - (val / maxVal) * chartH,
+    }));
+    const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+    return (
+      <div className="my-3 bg-neutral-900/60 rounded-xl p-3 overflow-x-auto">
+        {title && <div className="text-xs font-medium text-neutral-300 mb-2">{title}</div>}
+        <svg width={w} height={h}>
+          <path d={pathD} fill="none" stroke="#6366f1" strokeWidth="2" />
+          {points.map((p, i) => (
+            <g key={i}>
+              <circle cx={p.x} cy={p.y} r={3} fill="#6366f1" />
+              <text x={p.x} y={h - pad + 14} textAnchor="middle" fontSize="9" fill="#737373">{(labels[i] ?? '').slice(0, 8)}</text>
+            </g>
+          ))}
+          <line x1={pad} y1={h - pad} x2={w - pad} y2={h - pad} stroke="#404040" strokeWidth="1" />
+        </svg>
+      </div>
+    );
+  }
+
+  // Fallback: show raw data
+  return <pre className="bg-neutral-900/80 rounded-lg px-3 py-2 my-2 text-xs font-mono text-neutral-300">{JSON.stringify(chart, null, 2)}</pre>;
 }

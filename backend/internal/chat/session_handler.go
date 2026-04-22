@@ -2,10 +2,13 @@ package chat
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 
+	"github.com/zarvis/internal/analyze"
 	"github.com/zarvis/internal/auth"
 )
 
@@ -62,6 +65,85 @@ func (h *Handler) UpdateSession(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, sess)
+}
+
+// GetTabs returns which tabs should be enabled based on document state.
+func (h *Handler) GetTabs(w http.ResponseWriter, r *http.Request) {
+	sessionID := chi.URLParam(r, "id")
+
+	hasDoc := false
+	rawContent := ""
+	structuredJSON := ""
+	schemaJSON := ""
+
+	doc, err := h.Store.GetLatestDocument(sessionID)
+	if err == nil {
+		hasDoc = true
+		rawContent = doc.RawContent
+		structuredJSON = doc.StructuredJSON
+		schemaJSON = doc.SchemaJSON
+	}
+
+	forestDocCount := 0
+	forests, _ := h.Store.ListForests(sessionID)
+	for _, f := range forests {
+		if f.DocCount > forestDocCount {
+			forestDocCount = f.DocCount
+		}
+	}
+
+	tabs := analyze.TabRecommendations(hasDoc, rawContent, structuredJSON, schemaJSON, forestDocCount)
+	writeJSON(w, http.StatusOK, tabs)
+}
+
+// SearchDocument does a text search across raw and structured document content.
+func (h *Handler) SearchDocument(w http.ResponseWriter, r *http.Request) {
+	sessionID := chi.URLParam(r, "id")
+	query := r.URL.Query().Get("q")
+	if query == "" {
+		writeJSON(w, http.StatusOK, []any{})
+		return
+	}
+
+	doc, err := h.Store.GetLatestDocument(sessionID)
+	if err != nil {
+		writeJSON(w, http.StatusOK, []any{})
+		return
+	}
+
+	// Search both raw and structured content
+	var results []map[string]string
+	queryLower := strings.ToLower(query)
+
+	// Search raw content line by line
+	for i, line := range strings.Split(doc.RawContent, "\n") {
+		if strings.Contains(strings.ToLower(line), queryLower) {
+			results = append(results, map[string]string{
+				"source": "raw",
+				"line":   fmt.Sprintf("%d", i+1),
+				"text":   strings.TrimSpace(line),
+			})
+		}
+	}
+
+	// Search structured JSON
+	if doc.StructuredJSON != "" {
+		for i, line := range strings.Split(doc.StructuredJSON, "\n") {
+			if strings.Contains(strings.ToLower(line), queryLower) {
+				results = append(results, map[string]string{
+					"source": "structured",
+					"line":   fmt.Sprintf("%d", i+1),
+					"text":   strings.TrimSpace(line),
+				})
+			}
+		}
+	}
+
+	// Limit results
+	if len(results) > 20 {
+		results = results[:20]
+	}
+	writeJSON(w, http.StatusOK, results)
 }
 
 // GetBadges returns badges earned by a session.

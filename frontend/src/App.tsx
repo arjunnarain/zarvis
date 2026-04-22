@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, Suspense } from 'react';
 import Chat from './components/Chat';
 import SpiritOrb from './components/SpiritOrb';
-import ModuleTabs from './components/ModuleTabs';
+import ModuleTabs, { type TabState } from './components/ModuleTabs';
 import BadgeShelf from './components/BadgeShelf';
 import DocumentList, { type DocInfo } from './components/DocumentList';
 import ForestManager, { type ForestInfo } from './components/ForestManager';
@@ -41,6 +41,7 @@ function MainApp({ userName, onLogout }: { userName: string; onLogout: () => voi
   const [forests, setForests] = useState<ForestInfo[]>([]);
   const [activeForestId, setActiveForestId] = useState<number | null>(null);
   const [showExport, setShowExport] = useState(false);
+  const [tabStates, setTabStates] = useState<Record<string, TabState>>({});
   const autoForestCreated = useRef(false);
 
   useEffect(() => {
@@ -53,6 +54,7 @@ function MainApp({ userName, onLogout }: { userName: string; onLogout: () => voi
           loadBadges(s.id);
           loadDocuments(s.id);
           loadForests(s.id);
+          loadTabStates(s.id);
         })
         .catch(() => createSession());
     } else {
@@ -117,9 +119,17 @@ function MainApp({ userName, onLogout }: { userName: string; onLogout: () => voi
       }).catch(() => {});
   };
 
+  const loadTabStates = (sid: string) => {
+    apiFetch(`/api/session/${sid}/tabs`).then((r) => r.json())
+      .then((tabs: Record<string, TabState>) => setTabStates(tabs ?? {}))
+      .catch(() => {});
+  };
+
   const handleDocumentUploaded = async (doc: { id: number; filename: string }) => {
     setDocuments((prev) => [{ id: doc.id, filename: doc.filename, summary: '', created_at: new Date().toISOString() }, ...prev]);
     setActiveDocId(doc.id);
+    // Refresh tab states after upload
+    if (session) setTimeout(() => loadTabStates(session.id), 500);
     // Auto-add to active forest and refresh count
     if (activeForestId) {
       try {
@@ -218,7 +228,7 @@ function MainApp({ userName, onLogout }: { userName: string; onLogout: () => voi
         </button>
       </header>
 
-      <ModuleTabs active={activeModule} onChange={setActiveModule} />
+      <ModuleTabs active={activeModule} onChange={setActiveModule} tabStates={tabStates} />
 
       {/* Render all module chats, hide inactive ones to preserve state */}
       {['explorer', 'table', 'schema', 'summary', 'oracle'].map((mod) => (
