@@ -1,0 +1,119 @@
+{
+  "description": "Zarvis document processing tools. Each tool is available in specific modules.",
+  "tools": [
+    {
+      "name": "get_raw_document",
+      "display_name": "Read Document",
+      "description": "Get the raw content of the most recently uploaded document.",
+      "modules": ["explorer", "table", "schema", "summary"],
+      "input_schema": { "type": "object", "properties": {} }
+    },
+    {
+      "name": "save_structured_data",
+      "display_name": "Save Structured Data",
+      "description": "Save the parsed structured data as a JSON string. This is the clean, structured version of the document.",
+      "modules": ["explorer"],
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "data": { "type": "string", "description": "The structured data as a JSON string." }
+        },
+        "required": ["data"]
+      }
+    },
+    {
+      "name": "get_structured_data",
+      "display_name": "Get Structured Data",
+      "description": "Retrieve the previously parsed structured data.",
+      "modules": ["explorer", "table", "schema", "summary"],
+      "input_schema": { "type": "object", "properties": {} }
+    },
+    {
+      "name": "save_schema",
+      "display_name": "Save Schema",
+      "description": "Save the inferred schema as a JSON string.",
+      "modules": ["schema"],
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "schema": { "type": "string", "description": "The schema as a JSON string." }
+        },
+        "required": ["schema"]
+      }
+    },
+    {
+      "name": "get_schema",
+      "display_name": "Get Schema",
+      "description": "Retrieve the previously inferred schema.",
+      "modules": ["schema", "table"],
+      "input_schema": { "type": "object", "properties": {} }
+    },
+    {
+      "name": "save_summary",
+      "display_name": "Save Summary",
+      "description": "Save a human-readable summary of the document.",
+      "modules": ["summary"],
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "summary": { "type": "string", "description": "The summary text." }
+        },
+        "required": ["summary"]
+      }
+    },
+    {
+      "name": "get_summary",
+      "display_name": "Get Summary",
+      "description": "Retrieve the previously generated summary.",
+      "modules": ["summary"],
+      "input_schema": { "type": "object", "properties": {} }
+    },
+    {
+      "name": "query_structured_data",
+      "display_name": "Query Data",
+      "description": "Query the structured data to answer a question. Returns the data for in-context analysis.",
+      "modules": ["table", "explorer"],
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "query": { "type": "string", "description": "The question to answer about the data." }
+        },
+        "required": ["query"]
+      }
+    },
+    {
+      "name": "list_documents",
+      "display_name": "List Documents",
+      "description": "List all uploaded documents for this session.",
+      "modules": ["explorer", "table", "schema", "summary", "oracle"],
+      "input_schema": { "type": "object", "properties": {} }
+    },
+    {
+      "name": "get_forest_documents",
+      "display_name": "Forest Documents",
+      "description": "Load all documents and their structured data from the active forest. Use this to compare and analyze across documents.",
+      "modules": ["oracle"],
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "forest_id": { "type": "integer", "description": "The forest ID to load documents from." }
+        },
+        "required": ["forest_id"]
+      }
+    },
+    {
+      "name": "query_forest",
+      "display_name": "Query Forest",
+      "description": "Query across all documents in a forest to answer a cross-document question.",
+      "modules": ["oracle"],
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "forest_id": { "type": "integer", "description": "The forest ID." },
+          "query": { "type": "string", "description": "The question to answer across all documents." }
+        },
+        "required": ["forest_id", "query"]
+      }
+    }
+  ]
+}

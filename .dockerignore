@@ -1,0 +1,8 @@
+node_modules
+frontend/node_modules
+frontend/dist
+backend/zarvis.db
+*.db
+.git
+.idea
+.claude

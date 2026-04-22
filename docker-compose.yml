@@ -1,0 +1,15 @@
+services:
+  zarvis:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - ZARVIS_API_KEY=${ZARVIS_API_KEY}
+      - ZARVIS_BASE_URL=${ZARVIS_BASE_URL:-https://api.anthropic.com}
+      - ZARVIS_DB=/app/data/zarvis.db
+      - ZARVIS_STATIC_DIR=/app/static
+    volumes:
+      - zarvis-data:/app/data
+
+volumes:
+  zarvis-data:
