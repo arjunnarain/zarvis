@@ -67,7 +67,7 @@ export default function QualityBadge({ sessionId }: Props) {
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-neutral-200">Data Quality</span>
+            <span className="text-xs font-semibold text-neutral-200">Output Data Quality</span>
             <span className="text-sm font-bold" style={{ color }}>{quality.grade}</span>
           </div>
 
