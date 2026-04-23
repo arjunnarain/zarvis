@@ -4,9 +4,10 @@ import { setToken } from '../lib/api';
 
 interface Props {
   onAuth: (userName: string) => void;
+  onBack?: () => void;
 }
 
-export default function AuthScreen({ onAuth }: Props) {
+export default function AuthScreen({ onAuth, onBack }: Props) {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -54,9 +55,16 @@ export default function AuthScreen({ onAuth }: Props) {
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-sm"
       >
+        {onBack && (
+          <button onClick={onBack} className="flex items-center gap-1.5 text-xs text-neutral-500 hover:text-neutral-300 transition-colors mb-6">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>
+            Back to home
+          </button>
+        )}
+
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-neutral-100">Zarvis</h1>
-          <p className="text-xs text-neutral-500 mt-1">Document Intelligence Platform</p>
+          <h1 style={{ fontFamily: 'var(--font-serif)' }} className="text-3xl text-white">Zarvis</h1>
+          <p className="text-xs text-neutral-500 mt-2">Document Intelligence Platform</p>
         </div>
 
         <div className="bg-neutral-900/80 border border-neutral-800 rounded-2xl p-6 space-y-5">
