@@ -1,0 +1,8 @@
+backend/internal/analyze/quality.go
+  a53a9d52-168a-4612-8833-0ab07ea28307:2026-04-23T12:35:25.481Z 11-12,18-21,24-25,27-35,37,39-42,44-45,49-50,52-53,55-56,58-59,84,87,89-90,92-93,99-124,126-128,130-147,149-151,153-157,159-185,187-198,200-201,203-217
+frontend/src/components/Chat.tsx
+  a53a9d52-168a-4612-8833-0ab07ea28307:2026-04-23T12:36:52.137Z 5,51,195,301-304
+frontend/src/components/QualityBadge.tsx
+  a53a9d52-168a-4612-8833-0ab07ea28307:2026-04-23T12:36:07.558Z 2,8,23,26,29,32,34,36,38,40-41,43,48-59,61,63,68-72,74-88,91-94,96-105
+---
+{"schema_version": "authorship/3.0.0", "base_commit_sha": "HEAD~1", "prompts": {"a53a9d52-168a-4612-8833-0ab07ea28307:2026-04-23T12:35:25.481Z": {"agent_id": {"tool": "claude_code", "model": ""}, "human_author": "arjun.narain@razorpay.com", "accepted_lines": 149, "overriden_lines": 0}, "a53a9d52-168a-4612-8833-0ab07ea28307:2026-04-23T12:36:52.137Z": {"agent_id": {"tool": "claude_code", "model": ""}, "human_author": "arjun.narain@razorpay.com", "accepted_lines": 7, "overriden_lines": 0}, "a53a9d52-168a-4612-8833-0ab07ea28307:2026-04-23T12:36:07.558Z": {"agent_id": {"tool": "claude_code", "model": ""}, "human_author": "arjun.narain@razorpay.com", "accepted_lines": 60, "overriden_lines": 0}}}
