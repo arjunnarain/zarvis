@@ -1,0 +1,4 @@
+frontend/src/components/LandingPage.tsx
+  a53a9d52-168a-4612-8833-0ab07ea28307:2026-04-23T18:17:47.647Z 95,111-123,125-132,134-152,154-156,158-160,162,164,167,170,172-173,175,181-182
+---
+{"schema_version": "authorship/3.0.0", "base_commit_sha": "HEAD~1", "prompts": {"a53a9d52-168a-4612-8833-0ab07ea28307:2026-04-23T18:17:47.647Z": {"agent_id": {"tool": "claude_code", "model": ""}, "human_author": "arjun.narain@razorpay.com", "accepted_lines": 56, "overriden_lines": 0}}}
