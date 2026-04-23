@@ -5,6 +5,7 @@ import ModuleTabs, { type TabState } from './components/ModuleTabs';
 import DocumentList, { type DocInfo } from './components/DocumentList';
 import ForestManager, { type ForestInfo } from './components/ForestManager';
 import AuthScreen from './components/AuthScreen';
+import LandingPage from './components/LandingPage';
 import ExportModal from './components/ExportModal';
 import DiffView from './components/DiffView';
 import { getToken, clearToken, apiFetch } from './lib/api';
@@ -21,14 +22,20 @@ const FOREST_NAMES = [
 ];
 
 export default function App() {
+  const [showApp, setShowApp] = useState(!!getToken());
   const [authed, setAuthed] = useState(!!getToken());
   const [userName, setUserName] = useState(localStorage.getItem('zarvis_user_name') || '');
+
+  // Landing page → click "Open App" → auth screen → main app
+  if (!showApp) {
+    return <LandingPage onEnterApp={() => setShowApp(true)} />;
+  }
 
   if (!authed) {
     return <AuthScreen onAuth={(name) => { setUserName(name); setAuthed(true); }} />;
   }
 
-  return <MainApp userName={userName} onLogout={() => { clearToken(); localStorage.removeItem('zarvis_user_name'); setAuthed(false); }} />;
+  return <MainApp userName={userName} onLogout={() => { clearToken(); localStorage.removeItem('zarvis_user_name'); setAuthed(false); setShowApp(false); }} />;
 }
 
 function MainApp({ userName, onLogout }: { userName: string; onLogout: () => void }) {

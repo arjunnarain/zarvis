@@ -5,6 +5,8 @@
   --cub: #fbbf24;
   --guardian: #34d399;
   --mythic: #c084fc;
+  --font-serif: 'DM Serif Display', Georgia, serif;
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
 html, body, #root {
@@ -13,18 +15,16 @@ html, body, #root {
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-  background: #080810;
+  font-family: var(--font-sans);
+  background: #000;
   color: #e5e5e5;
   -webkit-font-smoothing: antialiased;
 }
 
-/* Scrollbar */
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #262626; border-radius: 2px; }
 ::-webkit-scrollbar-thumb:hover { background: #404040; }
 * { scrollbar-width: thin; scrollbar-color: #262626 transparent; }
 
-/* Canvas anti-flicker */
 canvas { display: block; }
