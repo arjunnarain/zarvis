@@ -31,7 +31,10 @@ interface Props {
 
 export default function ModuleTabs({ active, onChange, tabStates }: Props) {
   return (
-    <div className="flex items-center gap-0.5 px-5 py-1 overflow-x-auto" style={{ borderBottom: '1px solid var(--border)' }}>
+    <div
+      className="flex items-center gap-0.5 px-5 py-1 overflow-x-auto"
+      style={{ borderBottom: '1px solid var(--border)' }}
+    >
       {MODULES.map((mod) => {
         const isActive = active === mod.id;
         const state = tabStates[mod.id];
@@ -39,32 +42,60 @@ export default function ModuleTabs({ active, onChange, tabStates }: Props) {
 
         return (
           <div key={mod.id} className="relative group">
-            <button
+            <motion.button
               onClick={() => enabled && onChange(mod.id)}
               disabled={!enabled}
-              className="relative flex items-center gap-2 px-4 py-3 transition-all whitespace-nowrap"
+              whileHover={enabled && !isActive ? { y: -1 } : {}}
+              whileTap={enabled ? { scale: 0.97 } : {}}
+              className="relative flex items-center gap-2 px-4 py-3 rounded-lg transition-all duration-200 whitespace-nowrap"
               style={{
-                opacity: !enabled ? 0.25 : 1,
+                opacity: !enabled ? 0.2 : 1,
                 cursor: !enabled ? 'not-allowed' : 'pointer',
+                background: isActive ? `${mod.color}10` : 'transparent',
+              }}
+              onMouseEnter={(e) => {
+                if (enabled && !isActive) {
+                  e.currentTarget.style.background = `${mod.color}08`;
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isActive) {
+                  e.currentTarget.style.background = 'transparent';
+                }
               }}
             >
-              {/* Active bottom indicator */}
+              {/* Active indicator — bottom glow line */}
               {isActive && enabled && (
                 <motion.div
                   layoutId="tabIndicator"
-                  className="absolute bottom-0 left-2 right-2 h-[2px] rounded-full"
-                  style={{ background: `linear-gradient(90deg, ${mod.color}, ${mod.color}80)` }}
+                  className="absolute bottom-0 left-3 right-3 h-[2px]"
+                  style={{
+                    background: `linear-gradient(90deg, transparent, ${mod.color}, transparent)`,
+                    boxShadow: `0 0 8px ${mod.color}60, 0 0 20px ${mod.color}20`,
+                  }}
                   transition={{ type: 'spring', stiffness: 400, damping: 35 }}
                 />
               )}
 
-              <span className="text-sm" style={{ filter: enabled ? 'none' : 'grayscale(1)' }}>
+              {/* Hover glow dot behind emoji */}
+              {enabled && !isActive && (
+                <div
+                  className="absolute left-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-md"
+                  style={{ background: mod.color }}
+                />
+              )}
+
+              <span
+                className="relative z-10 text-sm transition-transform duration-200 group-hover:scale-110"
+                style={{ filter: enabled ? 'none' : 'grayscale(1)' }}
+              >
                 {enabled ? mod.emoji : '🔒'}
               </span>
               <span
-                className="text-[11px] tracking-wide"
+                className="relative z-10 transition-colors duration-200"
                 style={{
                   fontFamily: 'var(--font-sans)',
+                  fontSize: '11px',
                   fontWeight: isActive ? 500 : 400,
                   color: isActive ? '#ffffff' : enabled ? '#737373' : '#404040',
                   letterSpacing: '0.04em',
@@ -73,12 +104,26 @@ export default function ModuleTabs({ active, onChange, tabStates }: Props) {
               >
                 {mod.name}
               </span>
-            </button>
 
+              {/* Active dot */}
+              {isActive && (
+                <motion.div
+                  layoutId="tabDot"
+                  className="w-1 h-1 rounded-full relative z-10"
+                  style={{ background: mod.color, boxShadow: `0 0 4px ${mod.color}` }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 35 }}
+                />
+              )}
+            </motion.button>
+
+            {/* Tooltip for disabled tabs */}
             {!enabled && state?.reason && (
-              <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-3 py-1.5 rounded-lg text-[10px] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20"
-                style={{ background: 'var(--surface-3)', border: '1px solid var(--border)', color: '#737373' }}>
+              <div
+                className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-3 py-1.5 rounded-lg text-[10px] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20"
+                style={{ background: 'var(--surface-3)', border: '1px solid var(--border)', color: '#737373' }}
+              >
                 {state.reason}
+                <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 rotate-45" style={{ background: 'var(--surface-3)', borderLeft: '1px solid var(--border)', borderTop: '1px solid var(--border)' }} />
               </div>
             )}
           </div>

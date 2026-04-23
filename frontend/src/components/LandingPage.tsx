@@ -92,7 +92,7 @@ export default function LandingPage({ onEnterApp }: Props) {
       <nav className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-white/5">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <span style={{ fontFamily: 'var(--font-serif)' }} className="text-lg text-white">Zarvis</span>
+            <span style={{ fontFamily: 'var(--font-serif)', letterSpacing: '-0.02em' }} className="text-xl text-white">Zarvis</span>
           </div>
           <div className="flex items-center gap-6">
             <a href="#features" className="text-sm text-neutral-400 hover:text-white transition-colors">Features</a>
@@ -108,41 +108,77 @@ export default function LandingPage({ onEnterApp }: Props) {
       </nav>
 
       {/* Hero */}
-      <section className="min-h-screen flex flex-col items-center justify-center px-6 pt-20">
+      <section className="min-h-screen flex flex-col items-center justify-center px-6 pt-20 relative overflow-hidden">
+        {/* Fullscreen orb — fills entire hero as ambient background */}
         <Suspense fallback={null}>
           <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 1.2, ease: [0.25, 0.1, 0.25, 1] }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0.35 }}
+            transition={{ duration: 3, ease: 'easeOut' }}
+            className="absolute inset-0 pointer-events-none"
           >
-            <SpiritOrb stage={4} size="lg" />
+            <SpiritOrb stage={4} size="full" />
           </motion.div>
         </Suspense>
 
-        <motion.h1
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.3 }}
-          style={{ fontFamily: 'var(--font-serif)' }}
-          className="text-4xl sm:text-6xl lg:text-7xl text-center mt-12 max-w-4xl leading-tight text-white"
-        >
-          Turn Messy Documents Into Structured Data
-        </motion.h1>
+        {/* Radial glow behind title */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 2, delay: 0.5 }}
+          className="absolute inset-0 pointer-events-none"
+          style={{ background: 'radial-gradient(ellipse 60% 40% at 50% 45%, rgba(212, 168, 83, 0.06) 0%, transparent 70%)' }}
+        />
 
+        {/* ZARVIS wordmark */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ duration: 1, delay: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
+          className="relative z-10"
+        >
+          <h1
+            style={{
+              fontFamily: 'var(--font-serif)',
+              fontSize: 'clamp(4rem, 12vw, 10rem)',
+              lineHeight: 0.9,
+              letterSpacing: '-0.03em',
+              color: 'transparent',
+              backgroundImage: 'linear-gradient(180deg, #ffffff 0%, #a3a3a3 50%, #525252 100%)',
+              backgroundClip: 'text',
+              WebkitBackgroundClip: 'text',
+              textAlign: 'center',
+            }}
+          >
+            Zarvis
+          </h1>
+        </motion.div>
+
+        {/* Tagline */}
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.5 }}
-          className="text-lg sm:text-xl text-neutral-400 text-center mt-6 max-w-2xl leading-relaxed"
+          transition={{ duration: 0.8, delay: 0.6 }}
+          style={{ fontFamily: 'var(--font-serif)' }}
+          className="text-xl sm:text-2xl lg:text-3xl text-center mt-6 max-w-3xl leading-snug text-white/80 relative z-10"
         >
-          Upload any document — CSV, PDF, JSON, logs, invoices. Five AI-powered spirit guides parse, query, visualize, and compare your data.
+          Turn Messy Documents Into Structured Data
+        </motion.p>
+
+        <motion.p
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.8 }}
+          className="text-sm sm:text-base text-neutral-500 text-center mt-4 max-w-xl leading-relaxed relative z-10"
+        >
+          Upload any document — CSV, PDF, JSON, logs, invoices. Six AI-powered spirit guides parse, query, visualize, and compare your data.
         </motion.p>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.7 }}
-          className="flex gap-4 mt-10"
+          transition={{ duration: 0.8, delay: 1.0 }}
+          className="flex gap-4 mt-10 relative z-10"
         >
           <button
             onClick={onEnterApp}
