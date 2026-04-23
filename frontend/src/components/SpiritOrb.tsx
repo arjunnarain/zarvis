@@ -84,8 +84,24 @@ export default function SpiritOrb({
   size = 'md',
 }: {
   stage: number;
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'md' | 'lg' | 'full';
 }) {
+  if (size === 'full') {
+    return (
+      <div style={{ width: '100%', height: '100%', position: 'absolute', inset: 0 }}>
+        <Canvas
+          camera={{ position: [0, 0, 3], fov: 60 }}
+          gl={{ alpha: true, antialias: true }}
+          style={{ background: 'transparent' }}
+        >
+          <ambientLight intensity={0.5} />
+          <ParticleOrb stage={stage} size={3.5} />
+          <GlowCore stage={stage} size={3.5} />
+        </Canvas>
+      </div>
+    );
+  }
+
   const dims = { sm: 48, md: 120, lg: 240 }[size];
   const scale = { sm: 0.6, md: 1, lg: 1.8 }[size];
 

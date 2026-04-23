@@ -109,18 +109,17 @@ export default function LandingPage({ onEnterApp }: Props) {
 
       {/* Hero */}
       <section className="min-h-screen flex flex-col items-center justify-center px-6 pt-20 relative overflow-hidden">
-        {/* Background orb — large, centered behind text */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ top: '-5%' }}>
-          <Suspense fallback={null}>
-            <motion.div
-              initial={{ opacity: 0, scale: 0.5 }}
-              animate={{ opacity: 0.6, scale: 1 }}
-              transition={{ duration: 2, ease: [0.25, 0.1, 0.25, 1] }}
-            >
-              <SpiritOrb stage={4} size="lg" />
-            </motion.div>
-          </Suspense>
-        </div>
+        {/* Fullscreen orb — fills entire hero as ambient background */}
+        <Suspense fallback={null}>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0.35 }}
+            transition={{ duration: 3, ease: 'easeOut' }}
+            className="absolute inset-0 pointer-events-none"
+          >
+            <SpiritOrb stage={4} size="full" />
+          </motion.div>
+        </Suspense>
 
         {/* Radial glow behind title */}
         <motion.div
