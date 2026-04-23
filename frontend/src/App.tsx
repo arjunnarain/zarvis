@@ -183,18 +183,23 @@ function MainApp({ userName, onLogout }: { userName: string; onLogout: () => voi
   }
 
   return (
-    <div className="h-screen flex flex-col max-w-3xl mx-auto">
-      {/* Header */}
-      <header className="flex items-center gap-4 px-5 py-3 border-b border-white/5">
+    <div className="h-screen flex flex-col max-w-4xl mx-auto" style={{ background: 'var(--surface-0)' }}>
+      {/* Header — refined observatory style */}
+      <header className="flex items-center gap-5 px-6 py-4" style={{ borderBottom: '1px solid var(--border)' }}>
         <Suspense fallback={<div className="w-10 h-10" />}>
           <SpiritOrb stage={1} size="sm" />
         </Suspense>
+
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2.5">
-            <h1 style={{ fontFamily: 'var(--font-serif)' }} className="text-base text-white">Zarvis</h1>
-            {userName && <span className="text-[10px] text-neutral-600">Hi, {userName}</span>}
+          <div className="flex items-baseline gap-3">
+            <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.15rem', color: '#fff', letterSpacing: '-0.01em' }}>Zarvis</h1>
+            {userName && (
+              <span style={{ fontSize: '11px', color: '#525252', letterSpacing: '0.05em' }}>
+                {userName}
+              </span>
+            )}
           </div>
-          <div className="flex items-center gap-3 mt-1">
+          <div className="flex items-center gap-4 mt-1.5">
             <ForestManager
               sessionId={session.id}
               forests={forests}
@@ -216,24 +221,36 @@ function MainApp({ userName, onLogout }: { userName: string; onLogout: () => voi
           </div>
         </div>
 
-        {/* Action buttons */}
-        <div className="flex items-center gap-1">
+        {/* Action cluster */}
+        <div className="flex items-center gap-0.5">
           {documents.length > 0 && (
             <>
-              <button onClick={() => setShowDiff(true)} className="w-8 h-8 flex items-center justify-center rounded-lg text-neutral-500 hover:text-white hover:bg-white/5 transition-all" title="Before/After">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-                  <rect x="3" y="3" width="7" height="18" rx="1" /><rect x="14" y="3" width="7" height="18" rx="1" />
+              <button onClick={() => setShowDiff(true)} title="Before / After"
+                className="w-9 h-9 flex items-center justify-center rounded-xl transition-all duration-200"
+                style={{ color: '#525252' }}
+                onMouseEnter={(e) => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.background = 'var(--accent-dim)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.color = '#525252'; e.currentTarget.style.background = 'transparent'; }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                  <rect x="3" y="3" width="7" height="18" rx="2" /><rect x="14" y="3" width="7" height="18" rx="2" />
                 </svg>
               </button>
-              <button onClick={() => setShowExport(true)} className="w-8 h-8 flex items-center justify-center rounded-lg text-neutral-500 hover:text-white hover:bg-white/5 transition-all" title="Export">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <button onClick={() => setShowExport(true)} title="Export"
+                className="w-9 h-9 flex items-center justify-center rounded-xl transition-all duration-200"
+                style={{ color: '#525252' }}
+                onMouseEnter={(e) => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.background = 'var(--accent-dim)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.color = '#525252'; e.currentTarget.style.background = 'transparent'; }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
                 </svg>
               </button>
             </>
           )}
-          <button onClick={onLogout} className="w-8 h-8 flex items-center justify-center rounded-lg text-neutral-600 hover:text-neutral-300 hover:bg-white/5 transition-all" title="Sign out">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <button onClick={onLogout} title="Sign out"
+            className="w-9 h-9 flex items-center justify-center rounded-xl transition-all duration-200"
+            style={{ color: '#404040' }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = '#a3a3a3'; e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = '#404040'; e.currentTarget.style.background = 'transparent'; }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" />
             </svg>
           </button>
