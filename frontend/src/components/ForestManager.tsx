@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { apiFetch } from '../lib/api';
 
 export interface ForestInfo {
   id: number;
@@ -44,7 +45,7 @@ export default function ForestManager({ sessionId, forests, activeForestId, onSe
 
   const createForest = async () => {
     if (!newName.trim()) return;
-    const res = await fetch('/api/forest', {
+    const res = await apiFetch('/api/forest', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ session_id: sessionId, name: newName.trim() }),
@@ -59,14 +60,14 @@ export default function ForestManager({ sessionId, forests, activeForestId, onSe
 
   const clearForest = async () => {
     if (!activeForestId) return;
-    await fetch(`/api/forest/${activeForestId}/documents`, { method: 'DELETE' });
+    await apiFetch(`/api/forest/${activeForestId}/documents`, { method: 'DELETE' });
     onForestCleared();
     setOpen(false);
   };
 
   const addDocToForest = async (docId: number) => {
     if (!activeForestId) return;
-    await fetch(`/api/forest/${activeForestId}/documents`, {
+    await apiFetch(`/api/forest/${activeForestId}/documents`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ document_id: docId }),

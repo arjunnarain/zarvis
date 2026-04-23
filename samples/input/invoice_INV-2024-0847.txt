@@ -1,0 +1,33 @@
+INVOICE #INV-2024-0847
+
+From: Acme Cloud Services LLC
+      123 Tech Boulevard, Suite 400
+      San Francisco, CA 94105
+      Tax ID: 82-1234567
+
+To:   GlobalCorp Industries
+      456 Enterprise Ave
+      New York, NY 10001
+      Attn: Accounts Payable
+
+Date: March 15, 2024
+Due:  April 14, 2024
+PO#:  GC-2024-1122
+
+Description                          Qty    Unit Price    Amount
+-------------------------------------------------------------
+Cloud Compute (m5.xlarge)            720 hrs   $0.192    $138.24
+Cloud Compute (c5.2xlarge)           360 hrs   $0.340    $122.40
+Object Storage (S3)                  2.4 TB    $23.00/TB  $55.20
+Data Transfer (outbound)             850 GB    $0.09/GB   $76.50
+Managed Database (db.r5.large)       720 hrs   $0.250    $180.00
+Load Balancer                          1 mo    $18.00     $18.00
+SSL Certificate                        3       $0.00       FREE
+Premium Support                        1 mo   $100.00    $100.00
+-------------------------------------------------------------
+                                     Subtotal:           $690.34
+                                     Tax (8.875%):        $61.27
+                                     TOTAL:              $751.61
+
+Payment Terms: Net 30
+Wire to: Chase Bank, Acct# 4455667788, Routing# 021000021

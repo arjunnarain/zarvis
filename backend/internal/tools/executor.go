@@ -63,7 +63,14 @@ func (e *Executor) getRawDocument(sessionID string) Result {
 	if len(content) > 8000 {
 		content = content[:8000] + "\n\n... [truncated, " + fmt.Sprintf("%d", len(doc.RawContent)) + " chars total]"
 	}
-	return Result{Output: fmt.Sprintf("Document: %s\n\n%s", doc.Filename, content)}
+
+	// Include server-side pre-analysis if available
+	preAnalysis := ""
+	if doc.SchemaJSON != "" {
+		preAnalysis = "\n\n--- Server Pre-Analysis ---\n" + doc.SchemaJSON
+	}
+
+	return Result{Output: fmt.Sprintf("Document: %s\n\n%s%s", doc.Filename, content, preAnalysis)}
 }
 
 func (e *Executor) getStructuredData(sessionID string) Result {

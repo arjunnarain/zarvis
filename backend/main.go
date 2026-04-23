@@ -16,6 +16,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 
+	"github.com/zarvis/internal/auth"
 	"github.com/zarvis/internal/badges"
 	"github.com/zarvis/internal/chat"
 	"github.com/zarvis/internal/mcp"
@@ -61,6 +62,11 @@ func main() {
 	if base := os.Getenv("ZARVIS_BASE_URL"); base != "" {
 		opts = append(opts, option.WithBaseURL(base))
 	}
+	jwtSecret := os.Getenv("ZARVIS_JWT_SECRET")
+	if jwtSecret == "" {
+		jwtSecret = "zarvis-dev-secret-change-in-prod"
+	}
+
 	anthropicClient := anthropic.NewClient(opts...)
 	searchEngine := search.NewEngine(store)
 
@@ -72,6 +78,7 @@ func main() {
 		Badges:    badges.New(store),
 		Tools:     tools.NewExecutor(store, searchEngine),
 		Search:    searchEngine,
+		JWTSecret: jwtSecret,
 	}
 
 	r := chi.NewRouter()
@@ -90,21 +97,35 @@ func main() {
 		AllowCredentials: true,
 	}))
 
+	// Public routes
 	r.Get("/api/health", func(w http.ResponseWriter, _ *http.Request) { w.Write([]byte("ok")) })
-	r.Post("/api/session", h.CreateSession)
-	r.Get("/api/session/{id}", h.GetSession)
-	r.Patch("/api/session/{id}", h.UpdateSession)
-	r.Get("/api/session/{id}/badges", h.GetBadges)
-	r.Get("/api/session/{id}/document", h.GetDocument)
-	r.Get("/api/session/{id}/documents", h.ListDocuments)
-	r.Post("/api/upload", h.Upload)
-	r.Post("/api/sample", h.LoadSample)
-	r.Post("/api/forest", h.CreateForest)
-	r.Get("/api/session/{id}/forests", h.ListForests)
-	r.Post("/api/forest/{id}/documents", h.AddDocToForest)
-	r.Get("/api/forest/{id}/documents", h.GetForestDocs)
-	r.Delete("/api/forest/{id}/documents", h.ClearForest)
-	r.Post("/api/chat", h.Chat)
+	r.Post("/api/auth/register", h.Register)
+	r.Post("/api/auth/login", h.Login)
+
+	// Protected routes
+	r.Group(func(r chi.Router) {
+		r.Use(auth.Middleware(jwtSecret))
+		r.Get("/api/auth/me", h.GetMe)
+		r.Post("/api/session", h.CreateSession)
+		r.Get("/api/session/{id}", h.GetSession)
+		r.Patch("/api/session/{id}", h.UpdateSession)
+		r.Get("/api/session/{id}/badges", h.GetBadges)
+		r.Get("/api/session/{id}/tabs", h.GetTabs)
+		r.Get("/api/session/{id}/search", h.SearchDocument)
+		r.Get("/api/session/{id}/quality", h.GetQuality)
+		r.Get("/api/session/{id}/document", h.GetDocument)
+		r.Get("/api/session/{id}/documents", h.ListDocuments)
+		r.Get("/api/session/{id}/export", h.Export)
+		r.Get("/api/session/{id}/export-schema", h.ExportSchema)
+		r.Post("/api/upload", h.Upload)
+		r.Post("/api/sample", h.LoadSample)
+		r.Post("/api/forest", h.CreateForest)
+		r.Get("/api/session/{id}/forests", h.ListForests)
+		r.Post("/api/forest/{id}/documents", h.AddDocToForest)
+		r.Get("/api/forest/{id}/documents", h.GetForestDocs)
+		r.Delete("/api/forest/{id}/documents", h.ClearForest)
+		r.Post("/api/chat", h.Chat)
+	})
 
 	// Serve static frontend in production
 	if staticDir := os.Getenv("ZARVIS_STATIC_DIR"); staticDir != "" {

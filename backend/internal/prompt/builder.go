@@ -11,7 +11,7 @@ type Builder struct {
 }
 
 func NewBuilder(promptDir string) (*Builder, error) {
-	modules := []string{"explorer", "table", "schema", "summary", "oracle"}
+	modules := []string{"explorer", "table", "schema", "summary", "graphs", "oracle"}
 	b := &Builder{prompts: make(map[string]string)}
 
 	for _, mod := range modules {

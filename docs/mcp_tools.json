@@ -5,7 +5,7 @@
       "name": "get_raw_document",
       "display_name": "Read Document",
       "description": "Get the raw content of the most recently uploaded document.",
-      "modules": ["explorer", "table", "schema", "summary"],
+      "modules": ["explorer", "table", "schema", "summary", "graphs"],
       "input_schema": { "type": "object", "properties": {} }
     },
     {
@@ -25,7 +25,7 @@
       "name": "get_structured_data",
       "display_name": "Get Structured Data",
       "description": "Retrieve the previously parsed structured data.",
-      "modules": ["explorer", "table", "schema", "summary"],
+      "modules": ["explorer", "table", "schema", "summary", "graphs"],
       "input_schema": { "type": "object", "properties": {} }
     },
     {
