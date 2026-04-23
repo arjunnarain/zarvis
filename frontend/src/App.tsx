@@ -7,7 +7,6 @@ import DocumentList, { type DocInfo } from './components/DocumentList';
 import ForestManager, { type ForestInfo } from './components/ForestManager';
 import AuthScreen from './components/AuthScreen';
 import ExportModal from './components/ExportModal';
-import QualityBadge from './components/QualityBadge';
 import DiffView from './components/DiffView';
 import { getToken, clearToken, apiFetch } from './lib/api';
 
@@ -216,7 +215,6 @@ function MainApp({ userName, onLogout }: { userName: string; onLogout: () => voi
             )}
           </div>
         </div>
-        <QualityBadge sessionId={session.id} hasDocument={documents.length > 0} />
         <BadgeShelf earnedKeys={earnedBadges} />
         {documents.length > 0 && (
           <button onClick={() => setShowDiff(true)} className="text-neutral-500 hover:text-neutral-300 transition-colors" title="Before/After view">

@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, Suspense, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MODULES } from './ModuleTabs';
 import DocumentUpload from './DocumentUpload';
+import QualityBadge from './QualityBadge';
 import RawViewer from './RawViewer';
 import SearchPanel from './SearchPanel';
 import SpiritOrb from './SpiritOrb';
@@ -47,6 +48,7 @@ export default function Chat({ sessionId, module, isActive, userName, hasDocumen
   const [activeTools, setActiveTools] = useState<string[]>([]);
   const [showRawViewer, setShowRawViewer] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
+  const [showQuality, setShowQuality] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const streamingRef = useRef(false);
   const greetingSent = useRef(false);
@@ -190,6 +192,7 @@ export default function Chat({ sessionId, module, isActive, userName, hasDocumen
         // Refresh tabs when data is parsed
         if (payload.tool === 'save_structured_data' || payload.tool === 'save_schema') {
           onDataParsed?.();
+          if (payload.tool === 'save_structured_data') setShowQuality(true);
         }
         break;
       case 'badge': onBadgeEarned(payload.badge_key); break;
@@ -293,6 +296,11 @@ export default function Chat({ sessionId, module, isActive, userName, hasDocumen
                   View raw file
                 </button>
               </motion.div>
+            )}
+
+            {/* Quality score — shows after parsing completes */}
+            {showQuality && module === 'explorer' && (
+              <QualityBadge sessionId={sessionId} />
             )}
 
             {showSuggestions && suggestions.length > 0 && (

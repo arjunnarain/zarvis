@@ -8,86 +8,55 @@ import (
 // QualityScore represents a data quality assessment from 0-100.
 type QualityScore struct {
 	Score       int              `json:"score"`
-	Grade       string           `json:"grade"` // A, B, C, D, F
+	Grade       string           `json:"grade"`
+	Status      string           `json:"status"` // "pending", "scored"
 	Breakdown   QualityBreakdown `json:"breakdown"`
 	Suggestions []string         `json:"suggestions"`
 }
 
 type QualityBreakdown struct {
-	Completeness int `json:"completeness"` // 0-100: how few missing values
-	Consistency  int `json:"consistency"`  // 0-100: how uniform are types
-	Validity     int `json:"validity"`     // 0-100: how many values parse correctly
-	Structure    int `json:"structure"`    // 0-100: how well-structured is the data
+	Completeness int `json:"completeness"`
+	Consistency  int `json:"consistency"`
+	Validity     int `json:"validity"`
+	Structure    int `json:"structure"`
 }
 
-// ComputeQualityScore analyzes raw content and produces a quality score.
+// ComputeQualityScore assesses the quality of the STRUCTURED OUTPUT, not the raw input.
+// If no structured data exists yet, returns a "pending" status.
 func ComputeQualityScore(rawContent, structuredJSON string) *QualityScore {
-	schema := InferSchema(rawContent)
-	qs := &QualityScore{}
+	// No structured data yet — document hasn't been parsed
+	if structuredJSON == "" {
+		return &QualityScore{
+			Score:  0,
+			Grade:  "-",
+			Status: "pending",
+			Suggestions: []string{"Parse the document in Explorer to get a quality score"},
+		}
+	}
 
-	if schema == nil || len(schema.Fields) == 0 {
-		qs.Score = 20
+	qs := &QualityScore{Status: "scored"}
+
+	// Validate the structured JSON is actually valid
+	var parsed any
+	if json.Unmarshal([]byte(structuredJSON), &parsed) != nil {
+		qs.Score = 30
 		qs.Grade = "F"
-		qs.Breakdown = QualityBreakdown{Completeness: 20, Consistency: 20, Validity: 20, Structure: 20}
-		qs.Suggestions = []string{"Could not detect structure — document may be unstructured text"}
+		qs.Breakdown = QualityBreakdown{Completeness: 30, Consistency: 30, Validity: 30, Structure: 30}
+		qs.Suggestions = []string{"Structured output is not valid JSON — re-parse in Explorer"}
 		return qs
 	}
 
-	totalCells := schema.RowCount * schema.FieldCount
-	if totalCells == 0 {
-		totalCells = 1
-	}
+	// Structure score: how well-formed is the output?
+	structure := scoreStructure(parsed)
 
-	// Completeness: % of non-empty cells
-	totalEmpty := 0
-	for _, f := range schema.Fields {
-		totalEmpty += f.EmptyCount
-	}
-	completeness := 100 - int(math.Min(100, float64(totalEmpty*100)/float64(totalCells)))
+	// Completeness: check for null/empty values in the output
+	completeness := scoreCompleteness(structuredJSON)
 
-	// Consistency: % of fields with a single type (not mixed)
-	mixedCount := 0
-	for _, f := range schema.Fields {
-		if f.Type == TypeMixed {
-			mixedCount++
-		}
-	}
-	consistency := 100
-	if schema.FieldCount > 0 {
-		consistency = 100 - (mixedCount * 100 / schema.FieldCount)
-	}
+	// Consistency: check field type uniformity
+	consistency := scoreConsistency(structuredJSON)
 
-	// Validity: penalize for known issues
-	issueCount := len(schema.Issues)
-	validity := int(math.Max(0, float64(100-issueCount*8)))
-
-	// Structure: based on document type
-	structure := 50
-	switch schema.DocType {
-	case DocTypeCSV, DocTypeJSON:
-		structure = 90
-	case DocTypeXML:
-		structure = 80
-	case DocTypeLogFile:
-		structure = 60
-	case DocTypeKeyValue:
-		structure = 55
-	case DocTypeMarkdown:
-		structure = 40
-	case DocTypeUnknown:
-		structure = 20
-	}
-
-	// If structured JSON exists, bonus for structure
-	if structuredJSON != "" {
-		structure = int(math.Min(100, float64(structure+20)))
-
-		// Check if the structured output is actually good JSON
-		var parsed any
-		if json.Unmarshal([]byte(structuredJSON), &parsed) == nil {
-			validity = int(math.Min(100, float64(validity+10)))
-		}
-	}
+	// Validity: compare raw input analysis to see how much was captured
+	validity := scoreValidity(rawContent, structuredJSON)
 
 	qs.Breakdown = QualityBreakdown{
 		Completeness: completeness,
@@ -96,10 +65,8 @@ func ComputeQualityScore(rawContent, structuredJSON string) *QualityScore {
 		Structure:    structure,
 	}
 
-	// Weighted average
 	qs.Score = (completeness*30 + consistency*25 + validity*20 + structure*25) / 100
 
-	// Grade
 	switch {
 	case qs.Score >= 90:
 		qs.Grade = "A"
@@ -113,19 +80,138 @@ func ComputeQualityScore(rawContent, structuredJSON string) *QualityScore {
 		qs.Grade = "F"
 	}
 
-	// Suggestions
 	if completeness < 80 {
-		qs.Suggestions = append(qs.Suggestions, "High number of missing values — consider data imputation")
+		qs.Suggestions = append(qs.Suggestions, "Some values missing in output — consider re-parsing with more detail")
 	}
 	if consistency < 80 {
-		qs.Suggestions = append(qs.Suggestions, "Mixed data types detected — normalize columns to consistent types")
+		qs.Suggestions = append(qs.Suggestions, "Mixed types in output — ask Explorer to normalize types")
 	}
-	if validity < 70 {
-		qs.Suggestions = append(qs.Suggestions, "Multiple data quality issues found — review flagged problems")
+	if structure < 70 {
+		qs.Suggestions = append(qs.Suggestions, "Output structure could be improved — try re-parsing")
 	}
-	if structure < 60 {
-		qs.Suggestions = append(qs.Suggestions, "Weakly structured document — parsing may require manual review")
+	if qs.Score >= 85 {
+		qs.Suggestions = append(qs.Suggestions, "Good quality — ready for export and analysis")
 	}
 
 	return qs
+}
+
+func scoreStructure(parsed any) int {
+	switch v := parsed.(type) {
+	case []any:
+		if len(v) == 0 {
+			return 40
+		}
+		// Array of objects = well structured
+		if _, ok := v[0].(map[string]any); ok {
+			return 95
+		}
+		return 70
+	case map[string]any:
+		if len(v) == 0 {
+			return 30
+		}
+		// Nested object with arrays = well structured
+		for _, val := range v {
+			if arr, ok := val.([]any); ok && len(arr) > 0 {
+				return 90
+			}
+		}
+		return 80
+	default:
+		return 40
+	}
+}
+
+func scoreCompleteness(structuredJSON string) int {
+	totalFields := 0
+	nullFields := 0
+
+	var walk func(any)
+	walk = func(v any) {
+		switch val := v.(type) {
+		case map[string]any:
+			for _, fv := range val {
+				totalFields++
+				if fv == nil {
+					nullFields++
+				} else {
+					walk(fv)
+				}
+			}
+		case []any:
+			for _, item := range val {
+				walk(item)
+			}
+		}
+	}
+
+	var parsed any
+	json.Unmarshal([]byte(structuredJSON), &parsed)
+	walk(parsed)
+
+	if totalFields == 0 {
+		return 50
+	}
+	return int(math.Max(0, float64(100-nullFields*100/totalFields)))
+}
+
+func scoreConsistency(structuredJSON string) int {
+	// Check if arrays of objects have consistent keys
+	var arr []map[string]any
+	if json.Unmarshal([]byte(structuredJSON), &arr) == nil && len(arr) > 1 {
+		firstKeys := map[string]bool{}
+		for k := range arr[0] {
+			firstKeys[k] = true
+		}
+		matches := 0
+		for _, row := range arr[1:] {
+			rowKeys := map[string]bool{}
+			for k := range row {
+				rowKeys[k] = true
+			}
+			same := true
+			for k := range firstKeys {
+				if !rowKeys[k] {
+					same = false
+					break
+				}
+			}
+			if same {
+				matches++
+			}
+		}
+		return int(math.Min(100, float64(50+matches*50/len(arr))))
+	}
+
+	// Try nested arrays
+	var obj map[string]any
+	if json.Unmarshal([]byte(structuredJSON), &obj) == nil {
+		for _, v := range obj {
+			data, _ := json.Marshal(v)
+			var nested []map[string]any
+			if json.Unmarshal(data, &nested) == nil && len(nested) > 1 {
+				return 85 // Has consistent nested arrays
+			}
+		}
+		return 80 // Object structure
+	}
+
+	return 70
+}
+
+func scoreValidity(rawContent, structuredJSON string) int {
+	if rawContent == "" || structuredJSON == "" {
+		return 50
+	}
+	// Rough heuristic: ratio of structured size to raw size
+	// Good parsing should produce structured output that's comparable in information density
+	ratio := float64(len(structuredJSON)) / float64(len(rawContent))
+	if ratio > 0.5 {
+		return 90
+	}
+	if ratio > 0.2 {
+		return 75
+	}
+	return 55
 }
