@@ -1,6 +1,10 @@
 package analyze
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"regexp"
+	"strings"
+)
 
 // TabRec is a recommendation for whether a tab should be enabled.
 type TabRec struct {
@@ -30,33 +34,101 @@ func TabRecommendations(hasDoc bool, rawContent, structuredJSON, schemaJSON stri
 	// Schema: available if doc exists
 	tabs["schema"] = TabRec{Enabled: true, Reason: "Document uploaded"}
 
-	// Table: only if data is tabular
+	// Table: if data looks tabular (CSV/TSV or JSON arrays or raw content with tab-separated lines)
 	docType := DetectType(rawContent)
-	isTabular := docType == DocTypeCSV || hasTabularJSON(structuredJSON)
+	isTabular := docType == DocTypeCSV || hasTabularJSON(structuredJSON) || hasTabSeparatedData(rawContent)
 	if isTabular {
 		tabs["table"] = TabRec{Enabled: true, Reason: "Tabular data detected"}
 	} else {
 		tabs["table"] = TabRec{Enabled: false, Reason: "No tabular data — works best with CSV or JSON arrays"}
 	}
 
-	// Graphs: only if numeric fields exist in structured data
+	// Graphs: check structured data first, then fall back to raw content analysis
 	chartTypes := detectChartTypes(structuredJSON, schemaJSON)
+	if len(chartTypes) == 0 {
+		// No structured data yet — check if raw content has numbers (likely chartable after parsing)
+		chartTypes = detectChartTypesFromRaw(rawContent, docType)
+	}
 	if len(chartTypes) > 0 {
 		tabs["graphs"] = TabRec{Enabled: true, Reason: "Numeric data found", ChartTypes: chartTypes}
 	} else {
 		tabs["graphs"] = TabRec{Enabled: false, Reason: "No numeric data for visualization"}
 	}
 
-	// Oracle: only if forest has 2+ docs
+	// Oracle: enabled if forest has documents
 	if forestDocCount >= 2 {
-		tabs["oracle"] = TabRec{Enabled: true, Reason: "Forest has multiple documents"}
+		tabs["oracle"] = TabRec{Enabled: true, Reason: "Forest has multiple documents — compare and query across them"}
 	} else if forestDocCount == 1 {
-		tabs["oracle"] = TabRec{Enabled: false, Reason: "Add more documents to the forest to compare"}
+		tabs["oracle"] = TabRec{Enabled: true, Reason: "Query across your forest — add more docs to compare"}
 	} else {
 		tabs["oracle"] = TabRec{Enabled: false, Reason: "Add documents to a forest first"}
 	}
 
 	return tabs
+}
+
+// detectChartTypesFromRaw scans raw content for numbers to predict if charts are possible.
+func detectChartTypesFromRaw(rawContent string, docType DocType) []string {
+	if rawContent == "" {
+		return nil
+	}
+	// For CSV/TSV: check if any column has numbers
+	if docType == DocTypeCSV {
+		schema := InferSchema(rawContent)
+		hasNum := false
+		hasCat := false
+		hasDate := false
+		for _, f := range schema.Fields {
+			switch f.Type {
+			case TypeNumber:
+				hasNum = true
+			case TypeString:
+				hasCat = true
+			case TypeDate:
+				hasDate = true
+			}
+		}
+		if hasNum {
+			var types []string
+			if hasCat {
+				types = append(types, "bar", "pie")
+			}
+			if hasDate {
+				types = append(types, "line")
+			}
+			if len(types) == 0 {
+				types = append(types, "bar")
+			}
+			return types
+		}
+	}
+	// For other types: scan for number patterns
+	numberCount := 0
+	lines := strings.Split(rawContent, "\n")
+	for _, line := range lines {
+		// Look for dollar amounts, plain numbers, percentages
+		if numberRe.MatchString(line) {
+			numberCount++
+		}
+	}
+	if numberCount >= 3 {
+		return []string{"bar"}
+	}
+	return nil
+}
+
+var numberRe = regexp.MustCompile(`\$[\d,.]+|\b\d{2,}\b`)
+
+// hasTabSeparatedData checks if the content has multiple lines with consistent tab separators.
+func hasTabSeparatedData(content string) bool {
+	lines := strings.Split(content, "\n")
+	tabLines := 0
+	for _, line := range lines {
+		if strings.Count(line, "\t") >= 2 {
+			tabLines++
+		}
+	}
+	return tabLines >= 3
 }
 
 func hasTabularJSON(structuredJSON string) bool {

@@ -112,6 +112,7 @@ func main() {
 		r.Get("/api/session/{id}/badges", h.GetBadges)
 		r.Get("/api/session/{id}/tabs", h.GetTabs)
 		r.Get("/api/session/{id}/search", h.SearchDocument)
+		r.Get("/api/session/{id}/quality", h.GetQuality)
 		r.Get("/api/session/{id}/document", h.GetDocument)
 		r.Get("/api/session/{id}/documents", h.ListDocuments)
 		r.Get("/api/session/{id}/export", h.Export)

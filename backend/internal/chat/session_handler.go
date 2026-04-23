@@ -96,6 +96,18 @@ func (h *Handler) GetTabs(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, tabs)
 }
 
+// GetQuality returns the data quality score for the latest document.
+func (h *Handler) GetQuality(w http.ResponseWriter, r *http.Request) {
+	sessionID := chi.URLParam(r, "id")
+	doc, err := h.Store.GetLatestDocument(sessionID)
+	if err != nil {
+		http.Error(w, "no document", http.StatusNotFound)
+		return
+	}
+	quality := analyze.ComputeQualityScore(doc.RawContent, doc.StructuredJSON)
+	writeJSON(w, http.StatusOK, quality)
+}
+
 // SearchDocument does a text search across raw and structured document content.
 func (h *Handler) SearchDocument(w http.ResponseWriter, r *http.Request) {
 	sessionID := chi.URLParam(r, "id")

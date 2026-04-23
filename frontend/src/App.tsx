@@ -7,6 +7,8 @@ import DocumentList, { type DocInfo } from './components/DocumentList';
 import ForestManager, { type ForestInfo } from './components/ForestManager';
 import AuthScreen from './components/AuthScreen';
 import ExportModal from './components/ExportModal';
+import QualityBadge from './components/QualityBadge';
+import DiffView from './components/DiffView';
 import { getToken, clearToken, apiFetch } from './lib/api';
 
 export interface Session {
@@ -41,6 +43,7 @@ function MainApp({ userName, onLogout }: { userName: string; onLogout: () => voi
   const [forests, setForests] = useState<ForestInfo[]>([]);
   const [activeForestId, setActiveForestId] = useState<number | null>(null);
   const [showExport, setShowExport] = useState(false);
+  const [showDiff, setShowDiff] = useState(false);
   const [tabStates, setTabStates] = useState<Record<string, TabState>>({});
   const autoForestCreated = useRef(false);
 
@@ -213,7 +216,15 @@ function MainApp({ userName, onLogout }: { userName: string; onLogout: () => voi
             )}
           </div>
         </div>
+        <QualityBadge sessionId={session.id} hasDocument={documents.length > 0} />
         <BadgeShelf earnedKeys={earnedBadges} />
+        {documents.length > 0 && (
+          <button onClick={() => setShowDiff(true)} className="text-neutral-500 hover:text-neutral-300 transition-colors" title="Before/After view">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <rect x="3" y="3" width="7" height="18" rx="1" /><rect x="14" y="3" width="7" height="18" rx="1" />
+            </svg>
+          </button>
+        )}
         {documents.length > 0 && (
           <button onClick={() => setShowExport(true)} className="text-neutral-500 hover:text-neutral-300 transition-colors" title="Export data">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -231,7 +242,7 @@ function MainApp({ userName, onLogout }: { userName: string; onLogout: () => voi
       <ModuleTabs active={activeModule} onChange={setActiveModule} tabStates={tabStates} />
 
       {/* Render all module chats, hide inactive ones to preserve state */}
-      {['explorer', 'table', 'schema', 'summary', 'oracle'].map((mod) => (
+      {['explorer', 'table', 'schema', 'summary', 'graphs', 'oracle'].map((mod) => (
         <div key={mod} className={`flex-1 flex flex-col min-h-0 ${mod === activeModule ? '' : 'hidden'}`}>
           <Chat
             sessionId={session.id}
@@ -243,12 +254,16 @@ function MainApp({ userName, onLogout }: { userName: string; onLogout: () => voi
             forestDocs={forestDocs}
             onBadgeEarned={(k) => setEarnedBadges((p) => new Set([...p, k]))}
             onDocumentUploaded={handleDocumentUploaded}
+            onDataParsed={() => { if (session) loadTabStates(session.id); }}
           />
         </div>
       ))}
 
       {showExport && (
         <ExportModal sessionId={session.id} onClose={() => setShowExport(false)} />
+      )}
+      {showDiff && (
+        <DiffView sessionId={session.id} onClose={() => setShowDiff(false)} />
       )}
     </div>
   );

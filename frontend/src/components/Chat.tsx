@@ -25,6 +25,7 @@ interface Props {
   forestDocs: Array<{ id: number; filename: string }>;
   onBadgeEarned: (key: string) => void;
   onDocumentUploaded: (doc: { id: number; filename: string }) => void;
+  onDataParsed?: () => void;
 }
 
 const SUGGESTED_PROMPTS: Record<string, string[]> = {
@@ -36,7 +37,7 @@ const SUGGESTED_PROMPTS: Record<string, string[]> = {
   oracle: ['Compare all documents in this forest', 'Find common patterns', 'Summarize everything', 'What are the differences?'],
 };
 
-export default function Chat({ sessionId, module, isActive, userName, hasDocument, activeForestId, forestDocs, onBadgeEarned, onDocumentUploaded }: Props) {
+export default function Chat({ sessionId, module, isActive, userName, hasDocument, activeForestId, forestDocs, onBadgeEarned, onDocumentUploaded, onDataParsed }: Props) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [streaming, setStreaming] = useState(false);
@@ -90,8 +91,11 @@ export default function Chat({ sessionId, module, isActive, userName, hasDocumen
         }),
       });
       if (!res.ok || !res.body) {
-        // If 404, the session might not be ready — don't crash, just skip
         console.warn('chat request failed:', res.status);
+        // Allow greeting to retry on next activation
+        greetingSent.current = false;
+        // Remove the empty assistant message we added
+        setMessages((m) => m.filter((msg) => msg.content !== '' || msg.role !== 'assistant'));
         return;
       }
       const reader = res.body.getReader();
@@ -123,10 +127,11 @@ export default function Chat({ sessionId, module, isActive, userName, hasDocumen
     }
   };
 
-  // Auto-greet only when this tab becomes active for the first time
+  // Auto-greet: fire once when this tab is first shown
   useEffect(() => {
-    if (!isActive || greetingSent.current || !sessionId) return;
+    if (!isActive || !sessionId || greetingSent.current || streamingRef.current) return;
     greetingSent.current = true;
+
     const mod = moduleRef.current;
     const nameHint = userName ? ` IMPORTANT: The user's name is "${userName}". You MUST greet them as "${userName}" — never use "friend", "traveller", or generic terms.` : '';
     let greeting: string;
@@ -138,9 +143,9 @@ export default function Chat({ sessionId, module, isActive, userName, hasDocumen
     } else {
       greeting = `Hello, I just arrived.${nameHint}`;
     }
-    doSend(greeting, true);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isActive, sessionId]);
+    // Use setTimeout so React has time to commit the render
+    setTimeout(() => doSend(greeting, true), 100);
+  });  // no deps — runs every render, but greetingSent ref gates it to once
 
   const send = (text?: string) => {
     const msg = text ?? input;
@@ -182,6 +187,10 @@ export default function Chat({ sessionId, module, isActive, userName, hasDocumen
         break;
       case 'tool_result':
         setActiveTools((t) => t.slice(1));
+        // Refresh tabs when data is parsed
+        if (payload.tool === 'save_structured_data' || payload.tool === 'save_schema') {
+          onDataParsed?.();
+        }
         break;
       case 'badge': onBadgeEarned(payload.badge_key); break;
       case 'done': setGreetingDone(true); setActiveTools([]); break;
@@ -483,21 +492,59 @@ interface ChartData {
 
 const CHART_COLORS = ['#6366f1', '#f97316', '#22c55e', '#ef4444', '#eab308', '#14b8a6', '#c084fc', '#f472b6'];
 
+function ChartLegend({ datasets, colors }: { datasets: ChartData['datasets']; colors: string[] }) {
+  if (!datasets || datasets.length === 0) return null;
+  return (
+    <div className="flex flex-wrap gap-3 mt-2">
+      {datasets.map((ds, i) => (
+        <div key={i} className="flex items-center gap-1.5 text-[10px] text-neutral-400">
+          <span className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ backgroundColor: colors[i % colors.length] }} />
+          {ds.label}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function YAxisLabels({ maxVal, h, pad }: { maxVal: number; h: number; pad: number }) {
+  const steps = 4;
+  const chartH = h - pad * 2;
+  return (
+    <>
+      {Array.from({ length: steps + 1 }, (_, i) => {
+        const val = (maxVal / steps) * (steps - i);
+        const y = pad + (chartH / steps) * i;
+        const label = val >= 1000 ? `${(val / 1000).toFixed(val >= 10000 ? 0 : 1)}k` : val.toFixed(0);
+        return (
+          <g key={i}>
+            <text x={pad - 6} y={y + 3} textAnchor="end" fontSize="8" fill="#525252">{label}</text>
+            <line x1={pad} y1={y} x2={pad - 3} y2={y} stroke="#404040" strokeWidth="0.5" />
+            {i > 0 && <line x1={pad} y1={y} x2={400 - pad} y2={y} stroke="#262626" strokeWidth="0.5" strokeDasharray="3,3" />}
+          </g>
+        );
+      })}
+    </>
+  );
+}
+
 function InlineChart({ chart }: { chart: ChartData }) {
   const { type, title, labels, datasets } = chart;
   const data = datasets?.[0]?.data ?? [];
   const maxVal = Math.max(...data, 1);
-  const w = 400;
-  const h = 220;
-  const pad = 40;
+  const w = 420;
+  const h = 240;
+  const pad = 50;
+  const dsLabel = datasets?.[0]?.label ?? '';
 
   if (type === 'bar') {
-    const barW = Math.min(30, (w - pad * 2) / data.length - 4);
+    const barW = Math.min(28, (w - pad * 2) / data.length - 4);
     const chartH = h - pad * 2;
     return (
-      <div className="my-3 bg-neutral-900/60 rounded-xl p-3 overflow-x-auto">
-        {title && <div className="text-xs font-medium text-neutral-300 mb-2">{title}</div>}
-        <svg width={w} height={h} className="text-neutral-400">
+      <div className="my-3 bg-neutral-900/60 rounded-xl p-4 overflow-x-auto">
+        {title && <div className="text-xs font-semibold text-neutral-200 mb-1">{title}</div>}
+        <ChartLegend datasets={datasets} colors={CHART_COLORS} />
+        <svg width={w} height={h} className="mt-2">
+          <YAxisLabels maxVal={maxVal} h={h} pad={pad} />
           {data.map((val, i) => {
             const barH = (val / maxVal) * chartH;
             const x = pad + i * ((w - pad * 2) / data.length) + 2;
@@ -505,12 +552,13 @@ function InlineChart({ chart }: { chart: ChartData }) {
             return (
               <g key={i}>
                 <rect x={x} y={y} width={barW} height={barH} rx={3} fill={CHART_COLORS[i % CHART_COLORS.length]} opacity={0.85} />
-                <text x={x + barW / 2} y={h - pad + 14} textAnchor="middle" fontSize="9" fill="#737373">{(labels[i] ?? '').slice(0, 8)}</text>
-                <text x={x + barW / 2} y={y - 4} textAnchor="middle" fontSize="8" fill="#a3a3a3">{val.toLocaleString()}</text>
+                <text x={x + barW / 2} y={h - pad + 14} textAnchor="middle" fontSize="8" fill="#737373">{(labels[i] ?? '').slice(0, 10)}</text>
+                <text x={x + barW / 2} y={y - 4} textAnchor="middle" fontSize="7" fill="#a3a3a3">{val.toLocaleString()}</text>
               </g>
             );
           })}
           <line x1={pad} y1={h - pad} x2={w - pad} y2={h - pad} stroke="#404040" strokeWidth="1" />
+          <line x1={pad} y1={pad} x2={pad} y2={h - pad} stroke="#404040" strokeWidth="1" />
         </svg>
       </div>
     );
@@ -518,11 +566,11 @@ function InlineChart({ chart }: { chart: ChartData }) {
 
   if (type === 'pie') {
     const total = data.reduce((a, b) => a + b, 0);
-    let angle = 0;
+    let angle = -Math.PI / 2; // start from top
     const cx = 100, cy = 100, r = 80;
     return (
-      <div className="my-3 bg-neutral-900/60 rounded-xl p-3">
-        {title && <div className="text-xs font-medium text-neutral-300 mb-2">{title}</div>}
+      <div className="my-3 bg-neutral-900/60 rounded-xl p-4">
+        {title && <div className="text-xs font-semibold text-neutral-200 mb-2">{title}</div>}
         <div className="flex items-start gap-4">
           <svg width={200} height={200}>
             {data.map((val, i) => {
@@ -540,13 +588,19 @@ function InlineChart({ chart }: { chart: ChartData }) {
               );
             })}
           </svg>
-          <div className="space-y-1 pt-2">
-            {labels.map((label, i) => (
-              <div key={i} className="flex items-center gap-2 text-[10px] text-neutral-400">
-                <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: CHART_COLORS[i % CHART_COLORS.length] }} />
-                {label}: {data[i]?.toLocaleString()}
-              </div>
-            ))}
+          <div className="space-y-1.5 pt-2">
+            <div className="text-[10px] text-neutral-500 font-medium mb-1">{dsLabel || 'Legend'}</div>
+            {labels.map((label, i) => {
+              const pct = total > 0 ? ((data[i] / total) * 100).toFixed(1) : '0';
+              return (
+                <div key={i} className="flex items-center gap-2 text-[10px] text-neutral-400">
+                  <span className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ backgroundColor: CHART_COLORS[i % CHART_COLORS.length] }} />
+                  <span className="flex-1">{label}</span>
+                  <span className="text-neutral-500 tabular-nums">{data[i]?.toLocaleString()}</span>
+                  <span className="text-neutral-600 tabular-nums">({pct}%)</span>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -560,23 +614,34 @@ function InlineChart({ chart }: { chart: ChartData }) {
       y: h - pad - (val / maxVal) * chartH,
     }));
     const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+    // Gradient fill under line
+    const fillD = pathD + ` L ${points[points.length - 1]?.x ?? pad} ${h - pad} L ${pad} ${h - pad} Z`;
     return (
-      <div className="my-3 bg-neutral-900/60 rounded-xl p-3 overflow-x-auto">
-        {title && <div className="text-xs font-medium text-neutral-300 mb-2">{title}</div>}
-        <svg width={w} height={h}>
+      <div className="my-3 bg-neutral-900/60 rounded-xl p-4 overflow-x-auto">
+        {title && <div className="text-xs font-semibold text-neutral-200 mb-1">{title}</div>}
+        <ChartLegend datasets={datasets} colors={['#6366f1']} />
+        <svg width={w} height={h} className="mt-2">
+          <defs>
+            <linearGradient id="lineGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#6366f1" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#6366f1" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          <YAxisLabels maxVal={maxVal} h={h} pad={pad} />
+          <path d={fillD} fill="url(#lineGrad)" />
           <path d={pathD} fill="none" stroke="#6366f1" strokeWidth="2" />
           {points.map((p, i) => (
             <g key={i}>
-              <circle cx={p.x} cy={p.y} r={3} fill="#6366f1" />
-              <text x={p.x} y={h - pad + 14} textAnchor="middle" fontSize="9" fill="#737373">{(labels[i] ?? '').slice(0, 8)}</text>
+              <circle cx={p.x} cy={p.y} r={3} fill="#6366f1" stroke="#1e1b4b" strokeWidth="1.5" />
+              <text x={p.x} y={h - pad + 14} textAnchor="middle" fontSize="8" fill="#737373">{(labels[i] ?? '').slice(0, 10)}</text>
             </g>
           ))}
           <line x1={pad} y1={h - pad} x2={w - pad} y2={h - pad} stroke="#404040" strokeWidth="1" />
+          <line x1={pad} y1={pad} x2={pad} y2={h - pad} stroke="#404040" strokeWidth="1" />
         </svg>
       </div>
     );
   }
 
-  // Fallback: show raw data
   return <pre className="bg-neutral-900/80 rounded-lg px-3 py-2 my-2 text-xs font-mono text-neutral-300">{JSON.stringify(chart, null, 2)}</pre>;
 }
