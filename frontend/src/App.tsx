@@ -2,7 +2,6 @@ import { useEffect, useState, useRef, Suspense } from 'react';
 import Chat from './components/Chat';
 import SpiritOrb from './components/SpiritOrb';
 import ModuleTabs, { type TabState } from './components/ModuleTabs';
-import BadgeShelf from './components/BadgeShelf';
 import DocumentList, { type DocInfo } from './components/DocumentList';
 import ForestManager, { type ForestInfo } from './components/ForestManager';
 import AuthScreen from './components/AuthScreen';
@@ -35,7 +34,6 @@ export default function App() {
 function MainApp({ userName, onLogout }: { userName: string; onLogout: () => void }) {
   const [session, setSession] = useState<Session | null>(null);
   const [activeModule, setActiveModule] = useState('explorer');
-  const [earnedBadges, setEarnedBadges] = useState<Set<string>>(new Set());
   const [documents, setDocuments] = useState<DocInfo[]>([]);
   const [activeDocId, setActiveDocId] = useState<number | null>(null);
   const [docListOpen, setDocListOpen] = useState(false);
@@ -53,7 +51,6 @@ function MainApp({ userName, onLogout }: { userName: string; onLogout: () => voi
         .then((r) => (r.ok ? r.json() : Promise.reject()))
         .then((s: Session) => {
           setSession(s);
-          loadBadges(s.id);
           loadDocuments(s.id);
           loadForests(s.id);
           loadTabStates(s.id);
@@ -97,11 +94,6 @@ function MainApp({ userName, onLogout }: { userName: string; onLogout: () => voi
     } catch {}
   };
 
-  const loadBadges = (sid: string) => {
-    apiFetch(`/api/session/${sid}/badges`).then((r) => r.json())
-      .then((b: Array<{ badge_key: string }>) => { if (b) setEarnedBadges(new Set(b.map((x) => x.badge_key))); })
-      .catch(() => {});
-  };
 
   const loadDocuments = (sid: string) => {
     apiFetch(`/api/session/${sid}/documents`).then((r) => r.json())
@@ -215,7 +207,6 @@ function MainApp({ userName, onLogout }: { userName: string; onLogout: () => voi
             )}
           </div>
         </div>
-        <BadgeShelf earnedKeys={earnedBadges} />
         {documents.length > 0 && (
           <button onClick={() => setShowDiff(true)} className="text-neutral-500 hover:text-neutral-300 transition-colors" title="Before/After view">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
@@ -250,7 +241,7 @@ function MainApp({ userName, onLogout }: { userName: string; onLogout: () => voi
             hasDocument={documents.length > 0}
             activeForestId={activeForestId}
             forestDocs={forestDocs}
-            onBadgeEarned={(k) => setEarnedBadges((p) => new Set([...p, k]))}
+            onBadgeEarned={() => {}}
             onDocumentUploaded={handleDocumentUploaded}
             onDataParsed={() => { if (session) loadTabStates(session.id); }}
           />
