@@ -8,6 +8,7 @@ import (
 
 	"github.com/anthropics/anthropic-sdk-go"
 
+	"github.com/zarvis/internal/auth"
 	"github.com/zarvis/internal/mcp"
 )
 
@@ -28,6 +29,7 @@ func (h *Handler) Chat(w http.ResponseWriter, r *http.Request) {
 		req.Module = "explorer"
 	}
 
+	userID := auth.GetUserID(r)
 	sess, err := h.Store.GetSession(req.SessionID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
@@ -125,7 +127,7 @@ func (h *Handler) Chat(w http.ResponseWriter, r *http.Request) {
 		messages = append(messages, msg.ToParam())
 		var toolResults []anthropic.ContentBlockParamUnion
 		for _, tc := range toolCalls {
-			result := h.Tools.Execute(r.Context(), sess.ID, tc.Name, tc.Input)
+			result := h.Tools.Execute(r.Context(), userID, sess.ID, tc.Name, tc.Input)
 
 			newBadges := h.Badges.CheckAndAward(sess.ID, tc.Name)
 			for _, bk := range newBadges {

@@ -16,6 +16,21 @@ type createSessionReq struct {
 	PrimaryAnimal string `json:"primary_animal"`
 }
 
+// GetUserSessions returns all sessions for the authenticated user, most recent first.
+func (h *Handler) GetUserSessions(w http.ResponseWriter, r *http.Request) {
+	userID := auth.GetUserID(r)
+	sessions, err := h.Store.ListSessionsByUser(userID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if sessions == nil {
+		writeJSON(w, http.StatusOK, []any{})
+		return
+	}
+	writeJSON(w, http.StatusOK, sessions)
+}
+
 // CreateSession creates a new session for the authenticated user.
 func (h *Handler) CreateSession(w http.ResponseWriter, r *http.Request) {
 	var req createSessionReq
@@ -69,14 +84,14 @@ func (h *Handler) UpdateSession(w http.ResponseWriter, r *http.Request) {
 
 // GetTabs returns which tabs should be enabled based on document state.
 func (h *Handler) GetTabs(w http.ResponseWriter, r *http.Request) {
-	sessionID := chi.URLParam(r, "id")
+	userID := auth.GetUserID(r)
 
 	hasDoc := false
 	rawContent := ""
 	structuredJSON := ""
 	schemaJSON := ""
 
-	doc, err := h.Store.GetLatestDocument(sessionID)
+	doc, err := h.Store.GetLatestDocumentByUser(userID)
 	if err == nil {
 		hasDoc = true
 		rawContent = doc.RawContent
@@ -85,7 +100,7 @@ func (h *Handler) GetTabs(w http.ResponseWriter, r *http.Request) {
 	}
 
 	forestDocCount := 0
-	forests, _ := h.Store.ListForests(sessionID)
+	forests, _ := h.Store.ListForestsByUser(userID)
 	for _, f := range forests {
 		if f.DocCount > forestDocCount {
 			forestDocCount = f.DocCount
@@ -98,8 +113,8 @@ func (h *Handler) GetTabs(w http.ResponseWriter, r *http.Request) {
 
 // GetQuality returns the data quality score for the latest document.
 func (h *Handler) GetQuality(w http.ResponseWriter, r *http.Request) {
-	sessionID := chi.URLParam(r, "id")
-	doc, err := h.Store.GetLatestDocument(sessionID)
+	userID := auth.GetUserID(r)
+	doc, err := h.Store.GetLatestDocumentByUser(userID)
 	if err != nil {
 		http.Error(w, "no document", http.StatusNotFound)
 		return
@@ -110,14 +125,14 @@ func (h *Handler) GetQuality(w http.ResponseWriter, r *http.Request) {
 
 // SearchDocument does a text search across raw and structured document content.
 func (h *Handler) SearchDocument(w http.ResponseWriter, r *http.Request) {
-	sessionID := chi.URLParam(r, "id")
+	userID := auth.GetUserID(r)
 	query := r.URL.Query().Get("q")
 	if query == "" {
 		writeJSON(w, http.StatusOK, []any{})
 		return
 	}
 
-	doc, err := h.Store.GetLatestDocument(sessionID)
+	doc, err := h.Store.GetLatestDocumentByUser(userID)
 	if err != nil {
 		writeJSON(w, http.StatusOK, []any{})
 		return

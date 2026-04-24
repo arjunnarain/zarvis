@@ -9,18 +9,18 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/go-chi/chi/v5"
+	"github.com/zarvis/internal/auth"
 )
 
 // Export converts structured document data to CSV, JSON, or TSV for download.
 func (h *Handler) Export(w http.ResponseWriter, r *http.Request) {
-	sessionID := chi.URLParam(r, "id")
+	userID := auth.GetUserID(r)
 	format := r.URL.Query().Get("format")
 	if format == "" {
 		format = "json"
 	}
 
-	doc, err := h.Store.GetLatestDocument(sessionID)
+	doc, err := h.Store.GetLatestDocumentByUser(userID)
 	if err != nil {
 		http.Error(w, "no document", http.StatusNotFound)
 		return
@@ -245,8 +245,8 @@ func fileExt(name string) string {
 
 // ExportSchema exports the inferred schema as JSON.
 func (h *Handler) ExportSchema(w http.ResponseWriter, r *http.Request) {
-	sessionID := chi.URLParam(r, "id")
-	doc, err := h.Store.GetLatestDocument(sessionID)
+	userID := auth.GetUserID(r)
+	doc, err := h.Store.GetLatestDocumentByUser(userID)
 	if err != nil {
 		http.Error(w, "no document", http.StatusNotFound)
 		return

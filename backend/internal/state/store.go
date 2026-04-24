@@ -79,6 +79,7 @@ type Store interface {
 	CreateSession(userID, animal string) (*Session, error)
 	GetSession(id string) (*Session, error)
 	UpdateSession(s *Session) error
+	ListSessionsByUser(userID string) ([]Session, error)
 
 	RecentMessages(sessionID, module string, limit int) ([]Message, error)
 	AppendMessage(sessionID, module, role, content string) error
@@ -86,12 +87,15 @@ type Store interface {
 	SaveDocument(sessionID, filename, rawContent string) (*Document, error)
 	GetDocument(id int64) (*Document, error)
 	GetLatestDocument(sessionID string) (*Document, error)
+	GetLatestDocumentByUser(userID string) (*Document, error)
 	ListDocuments(sessionID string) ([]Document, error)
+	ListDocumentsByUser(userID string) ([]Document, error)
 	UpdateDocumentStructured(id int64, structured, schema, summary string) error
 
 	CreateForest(sessionID, name string) (*Forest, error)
 	GetForest(id int64) (*Forest, error)
 	ListForests(sessionID string) ([]Forest, error)
+	ListForestsByUser(userID string) ([]Forest, error)
 	AddDocumentToForest(forestID, docID int64) error
 	GetForestDocuments(forestID int64) ([]Document, error)
 
@@ -239,6 +243,25 @@ func (s *SQLiteStore) GetSession(id string) (*Session, error) {
 	return &sess, err
 }
 
+func (s *SQLiteStore) ListSessionsByUser(userID string) ([]Session, error) {
+	rows, err := s.db.Query(
+		`SELECT id, user_id, primary_animal, created_at, updated_at FROM sessions WHERE user_id=? ORDER BY updated_at DESC`,
+		userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var sessions []Session
+	for rows.Next() {
+		var sess Session
+		if err := rows.Scan(&sess.ID, &sess.UserID, &sess.PrimaryAnimal, &sess.CreatedAt, &sess.UpdatedAt); err != nil {
+			return nil, err
+		}
+		sessions = append(sessions, sess)
+	}
+	return sessions, rows.Err()
+}
+
 func (s *SQLiteStore) UpdateSession(sess *Session) error {
 	sess.UpdatedAt = time.Now().UTC()
 	_, err := s.db.Exec(`UPDATE sessions SET primary_animal=?, updated_at=? WHERE id=?`,
@@ -325,6 +348,60 @@ func (s *SQLiteStore) ListDocuments(sessionID string) ([]Document, error) {
 		docs = append(docs, d)
 	}
 	return docs, rows.Err()
+}
+
+func (s *SQLiteStore) GetLatestDocumentByUser(userID string) (*Document, error) {
+	var d Document
+	err := s.db.QueryRow(
+		`SELECT d.id, d.session_id, d.filename, d.raw_content, d.structured_json, d.schema_json, d.summary, d.created_at
+		 FROM documents d JOIN sessions s ON d.session_id = s.id
+		 WHERE s.user_id = ? ORDER BY d.id DESC LIMIT 1`, userID,
+	).Scan(&d.ID, &d.SessionID, &d.Filename, &d.RawContent, &d.StructuredJSON, &d.SchemaJSON, &d.Summary, &d.CreatedAt)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrNotFound
+	}
+	return &d, err
+}
+
+func (s *SQLiteStore) ListDocumentsByUser(userID string) ([]Document, error) {
+	rows, err := s.db.Query(
+		`SELECT d.id, d.session_id, d.filename, '', '', '', d.summary, d.created_at
+		 FROM documents d JOIN sessions s ON d.session_id = s.id
+		 WHERE s.user_id = ? ORDER BY d.id DESC LIMIT 20`, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var docs []Document
+	for rows.Next() {
+		var d Document
+		if err := rows.Scan(&d.ID, &d.SessionID, &d.Filename, &d.RawContent, &d.StructuredJSON, &d.SchemaJSON, &d.Summary, &d.CreatedAt); err != nil {
+			return nil, err
+		}
+		docs = append(docs, d)
+	}
+	return docs, rows.Err()
+}
+
+func (s *SQLiteStore) ListForestsByUser(userID string) ([]Forest, error) {
+	rows, err := s.db.Query(
+		`SELECT f.id, f.session_id, f.name, f.created_at, COUNT(fd.document_id)
+		 FROM forests f JOIN sessions s ON f.session_id = s.id
+		 LEFT JOIN forest_documents fd ON f.id = fd.forest_id
+		 WHERE s.user_id = ? GROUP BY f.id ORDER BY f.id DESC`, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var forests []Forest
+	for rows.Next() {
+		var f Forest
+		if err := rows.Scan(&f.ID, &f.SessionID, &f.Name, &f.CreatedAt, &f.DocCount); err != nil {
+			return nil, err
+		}
+		forests = append(forests, f)
+	}
+	return forests, rows.Err()
 }
 
 func (s *SQLiteStore) UpdateDocumentStructured(id int64, structured, schemaJSON, summary string) error {

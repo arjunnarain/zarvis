@@ -25,26 +25,26 @@ func NewExecutor(store state.Store, searchEngine *search.Engine) *Executor {
 	return &Executor{Store: store, Search: searchEngine}
 }
 
-func (e *Executor) Execute(_ context.Context, sessionID, toolName string, input json.RawMessage) Result {
+func (e *Executor) Execute(_ context.Context, userID, sessionID, toolName string, input json.RawMessage) Result {
 	switch toolName {
 	case "get_raw_document":
-		return e.getRawDocument(sessionID)
+		return e.getRawDocument(userID)
 	case "get_structured_data":
-		return e.getStructuredData(sessionID)
+		return e.getStructuredData(userID)
 	case "save_structured_data":
-		return e.saveStructuredData(sessionID, input)
+		return e.saveStructuredData(userID, input)
 	case "get_schema":
-		return e.getSchema(sessionID)
+		return e.getSchema(userID)
 	case "save_schema":
-		return e.saveSchema(sessionID, input)
+		return e.saveSchema(userID, input)
 	case "save_summary":
-		return e.saveSummary(sessionID, input)
+		return e.saveSummary(userID, input)
 	case "get_summary":
-		return e.getSummary(sessionID)
+		return e.getSummary(userID)
 	case "query_structured_data":
-		return e.queryStructuredData(sessionID, input)
+		return e.queryStructuredData(userID, input)
 	case "list_documents":
-		return e.listDocuments(sessionID)
+		return e.listDocuments(userID)
 	case "get_forest_documents":
 		return e.getForestDocuments(input)
 	case "query_forest":
@@ -54,8 +54,8 @@ func (e *Executor) Execute(_ context.Context, sessionID, toolName string, input 
 	}
 }
 
-func (e *Executor) getRawDocument(sessionID string) Result {
-	doc, err := e.Store.GetLatestDocument(sessionID)
+func (e *Executor) getRawDocument(userID string) Result {
+	doc, err := e.Store.GetLatestDocumentByUser(userID)
 	if err != nil {
 		return Result{Error: "No document uploaded yet. Ask the user to upload a document first."}
 	}
@@ -73,8 +73,8 @@ func (e *Executor) getRawDocument(sessionID string) Result {
 	return Result{Output: fmt.Sprintf("Document: %s\n\n%s%s", doc.Filename, content, preAnalysis)}
 }
 
-func (e *Executor) getStructuredData(sessionID string) Result {
-	doc, err := e.Store.GetLatestDocument(sessionID)
+func (e *Executor) getStructuredData(userID string) Result {
+	doc, err := e.Store.GetLatestDocumentByUser(userID)
 	if err != nil {
 		return Result{Error: "No document uploaded yet."}
 	}
@@ -84,14 +84,14 @@ func (e *Executor) getStructuredData(sessionID string) Result {
 	return Result{Output: doc.StructuredJSON}
 }
 
-func (e *Executor) saveStructuredData(sessionID string, input json.RawMessage) Result {
+func (e *Executor) saveStructuredData(userID string, input json.RawMessage) Result {
 	var params struct {
 		Data string `json:"data"`
 	}
 	if err := json.Unmarshal(input, &params); err != nil || params.Data == "" {
 		return Result{Error: "data (JSON string) is required"}
 	}
-	doc, err := e.Store.GetLatestDocument(sessionID)
+	doc, err := e.Store.GetLatestDocumentByUser(userID)
 	if err != nil {
 		return Result{Error: "No document to attach structured data to."}
 	}
@@ -103,8 +103,8 @@ func (e *Executor) saveStructuredData(sessionID string, input json.RawMessage) R
 	return Result{Output: "Structured data saved successfully."}
 }
 
-func (e *Executor) getSchema(sessionID string) Result {
-	doc, err := e.Store.GetLatestDocument(sessionID)
+func (e *Executor) getSchema(userID string) Result {
+	doc, err := e.Store.GetLatestDocumentByUser(userID)
 	if err != nil {
 		return Result{Error: "No document uploaded yet."}
 	}
@@ -114,14 +114,14 @@ func (e *Executor) getSchema(sessionID string) Result {
 	return Result{Output: doc.SchemaJSON}
 }
 
-func (e *Executor) saveSchema(sessionID string, input json.RawMessage) Result {
+func (e *Executor) saveSchema(userID string, input json.RawMessage) Result {
 	var params struct {
 		Schema string `json:"schema"`
 	}
 	if err := json.Unmarshal(input, &params); err != nil || params.Schema == "" {
 		return Result{Error: "schema (JSON string) is required"}
 	}
-	doc, err := e.Store.GetLatestDocument(sessionID)
+	doc, err := e.Store.GetLatestDocumentByUser(userID)
 	if err != nil {
 		return Result{Error: "No document to attach schema to."}
 	}
@@ -131,14 +131,14 @@ func (e *Executor) saveSchema(sessionID string, input json.RawMessage) Result {
 	return Result{Output: "Schema saved successfully."}
 }
 
-func (e *Executor) saveSummary(sessionID string, input json.RawMessage) Result {
+func (e *Executor) saveSummary(userID string, input json.RawMessage) Result {
 	var params struct {
 		Summary string `json:"summary"`
 	}
 	if err := json.Unmarshal(input, &params); err != nil || params.Summary == "" {
 		return Result{Error: "summary is required"}
 	}
-	doc, err := e.Store.GetLatestDocument(sessionID)
+	doc, err := e.Store.GetLatestDocumentByUser(userID)
 	if err != nil {
 		return Result{Error: "No document to attach summary to."}
 	}
@@ -148,8 +148,8 @@ func (e *Executor) saveSummary(sessionID string, input json.RawMessage) Result {
 	return Result{Output: "Summary saved successfully."}
 }
 
-func (e *Executor) getSummary(sessionID string) Result {
-	doc, err := e.Store.GetLatestDocument(sessionID)
+func (e *Executor) getSummary(userID string) Result {
+	doc, err := e.Store.GetLatestDocumentByUser(userID)
 	if err != nil {
 		return Result{Error: "No document uploaded yet."}
 	}
@@ -159,14 +159,14 @@ func (e *Executor) getSummary(sessionID string) Result {
 	return Result{Output: doc.Summary}
 }
 
-func (e *Executor) queryStructuredData(sessionID string, input json.RawMessage) Result {
+func (e *Executor) queryStructuredData(userID string, input json.RawMessage) Result {
 	var params struct {
 		Query string `json:"query"`
 	}
 	if err := json.Unmarshal(input, &params); err != nil || params.Query == "" {
 		return Result{Error: "query is required"}
 	}
-	doc, err := e.Store.GetLatestDocument(sessionID)
+	doc, err := e.Store.GetLatestDocumentByUser(userID)
 	if err != nil {
 		return Result{Error: "No document uploaded yet."}
 	}
@@ -177,8 +177,8 @@ func (e *Executor) queryStructuredData(sessionID string, input json.RawMessage) 
 	return Result{Output: fmt.Sprintf("Structured data to answer query \"%s\":\n\n%s", params.Query, doc.StructuredJSON)}
 }
 
-func (e *Executor) listDocuments(sessionID string) Result {
-	docs, err := e.Store.ListDocuments(sessionID)
+func (e *Executor) listDocuments(userID string) Result {
+	docs, err := e.Store.ListDocumentsByUser(userID)
 	if err != nil {
 		return Result{Error: err.Error()}
 	}

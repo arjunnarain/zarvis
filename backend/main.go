@@ -106,6 +106,7 @@ func main() {
 	r.Group(func(r chi.Router) {
 		r.Use(auth.Middleware(jwtSecret))
 		r.Get("/api/auth/me", h.GetMe)
+		r.Get("/api/sessions", h.GetUserSessions)
 		r.Post("/api/session", h.CreateSession)
 		r.Get("/api/session/{id}", h.GetSession)
 		r.Patch("/api/session/{id}", h.UpdateSession)

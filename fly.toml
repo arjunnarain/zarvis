@@ -1,0 +1,23 @@
+app = "zarvis-doc-intel"
+primary_region = "sin"
+
+[env]
+  ZARVIS_BASE_URL = "https://api.anthropic.com"
+  ZARVIS_DB = "/data/zarvis.db"
+  ZARVIS_DOCS_DIR = "/app/docs"
+  ZARVIS_STATIC_DIR = "/app/static"
+
+[[mounts]]
+  source = "zarvis_data"
+  destination = "/data"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"

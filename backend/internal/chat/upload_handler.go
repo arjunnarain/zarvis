@@ -10,9 +10,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/go-chi/chi/v5"
-
 	"github.com/zarvis/internal/analyze"
+	"github.com/zarvis/internal/auth"
 	"github.com/zarvis/internal/state"
 )
 
@@ -86,8 +85,8 @@ func (h *Handler) Upload(w http.ResponseWriter, r *http.Request) {
 
 // GetDocument returns the latest document with structured data.
 func (h *Handler) GetDocument(w http.ResponseWriter, r *http.Request) {
-	sessionID := chi.URLParam(r, "id")
-	doc, err := h.Store.GetLatestDocument(sessionID)
+	userID := auth.GetUserID(r)
+	doc, err := h.Store.GetLatestDocumentByUser(userID)
 	if err != nil {
 		http.Error(w, "no document", http.StatusNotFound)
 		return
@@ -95,10 +94,10 @@ func (h *Handler) GetDocument(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, doc)
 }
 
-// ListDocuments returns all documents for a session.
+// ListDocuments returns all documents for the authenticated user.
 func (h *Handler) ListDocuments(w http.ResponseWriter, r *http.Request) {
-	sessionID := chi.URLParam(r, "id")
-	docs, err := h.Store.ListDocuments(sessionID)
+	userID := auth.GetUserID(r)
+	docs, err := h.Store.ListDocumentsByUser(userID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
+	"github.com/zarvis/internal/auth"
 	"github.com/zarvis/internal/state"
 )
 
@@ -28,10 +29,10 @@ func (h *Handler) CreateForest(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusCreated, f)
 }
 
-// ListForests returns all forests for a session.
+// ListForests returns all forests for the authenticated user.
 func (h *Handler) ListForests(w http.ResponseWriter, r *http.Request) {
-	sid := chi.URLParam(r, "id")
-	forests, err := h.Store.ListForests(sid)
+	userID := auth.GetUserID(r)
+	forests, err := h.Store.ListForestsByUser(userID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

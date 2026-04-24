@@ -62,11 +62,30 @@ function MainApp({ userName, onLogout }: { userName: string; onLogout: () => voi
           loadForests(s.id);
           loadTabStates(s.id);
         })
-        .catch(() => createSession());
+        .catch(() => resumeOrCreateSession());
     } else {
-      createSession();
+      resumeOrCreateSession();
     }
   }, []);
+
+  const resumeOrCreateSession = () => {
+    // Try to resume the most recent session for this user (e.g. logging in from a new device)
+    apiFetch('/api/sessions')
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then((sessions: Session[]) => {
+        if (sessions && sessions.length > 0) {
+          const s = sessions[0];
+          localStorage.setItem('zarvis_session_id', s.id);
+          setSession(s);
+          loadDocuments(s.id);
+          loadForests(s.id);
+          loadTabStates(s.id);
+        } else {
+          createSession();
+        }
+      })
+      .catch(() => createSession());
+  };
 
   const createSession = () => {
     apiFetch('/api/session', {
