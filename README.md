@@ -343,5 +343,5 @@ zarvis/
 ---
 
 <p align="center">
-  <sub>Built by <a href="https://github.com/arjunnarain">Arjun Narain</a> for the Razorpay engineering challenge</sub>
+  <sub>Built by <a href="https://github.com/arjunnarain">Arjun Narain</a></sub>
 </p>
