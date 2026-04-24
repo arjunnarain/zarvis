@@ -333,7 +333,6 @@ export default function LandingPage({ onEnterApp }: Props) {
       <footer className="border-t border-white/5 py-8 px-6">
         <div className="max-w-5xl mx-auto flex items-center justify-between text-xs text-neutral-600">
           <span style={{ fontFamily: 'var(--font-serif)' }}>Zarvis</span>
-          <span>Built for the Razorpay engineering challenge</span>
         </div>
       </footer>
     </div>
